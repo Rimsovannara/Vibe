@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Play The Marías – No One Noticed</title>
+</head>
+<body>
+  <h1>Play the Song</h1>
+
+  <!-- Option 1: HTML5 Audio Player -->
+  <audio controls>
+    <source src="https://github.com/Rimsovannara/Vibe/raw/refs/heads/main/The%20Mar%C3%ADas%20-%20No%20One%20Noticed.mp3?raw=true" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <hr>
+
+  <!-- Option 2: JavaScript Controlled Playback -->
+  <button id="playBtn">Play via JavaScript</button>
+  <script>
+    // Use raw .mp3 link from GitHub
+    const audio = new Audio("https://github.com/Rimsovannara/Vibe/raw/refs/heads/main/The%20Mar%C3%ADas%20-%20No%20One%20Noticed.mp3?raw=true");
+    document.getElementById("playBtn").addEventListener("click", () => {
+      audio.play();
+    });
+  </script>
+</body>
+</html>
