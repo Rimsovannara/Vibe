@@ -108,6 +108,10 @@
                 0 20px 40px rgba(0, 0, 0, 0.3),
                 0 0 0 1px rgba(255, 255, 255, 0.2);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-image: url('https://en.wikipedia.org/wiki/No_One_Noticed#/media/File:The_Mar%C3%ADas_-_No_One_Noticed_(Extended).png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         .album-art:hover {
@@ -123,11 +127,12 @@
         }
 
         .album-art::before {
-            content: "♪";
+            content: "";
             font-size: 80px;
             color: white;
             text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             animation: pulse 2s ease-in-out infinite;
+            display: none;
         }
 
         @keyframes pulse {
