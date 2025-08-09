@@ -898,8 +898,28 @@ Wish it weren't true</span>
                 if (currentTime >= 0 && currentTime < 0.5 && !this.firstLyricShown) {
                     this.firstLyricShown = true;
                     this.showLyrics("Maybe I lost my mind", "No one noticed");
-                    // Disable lyrics after showing the first one
-                    this.lyricsEnabled = false;
+                }
+                
+                // Continue showing synchronized lyrics throughout the song
+                if (this.firstLyricShown) {
+                    // Find the current lyric based on timing
+                    let currentLyric = null;
+                    let nextLyric = null;
+                    
+                    for (let i = 0; i < this.lyricsData.length; i++) {
+                        if (currentTime >= this.lyricsData[i].time) {
+                            currentLyric = this.lyricsData[i];
+                            nextLyric = this.lyricsData[i + 1] || { text: "", next: "" };
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // Only update if we have a new lyric and enough time has passed
+                    if (currentLyric && currentTime - this.lastLyricTime >= 2) {
+                        this.lastLyricTime = currentTime;
+                        this.showLyrics(currentLyric.text, currentLyric.next);
+                    }
                 }
             }
 
@@ -922,11 +942,11 @@ Wish it weren't true</span>
                 // Update progress bar
                 this.updateLyricsProgress();
                 
-                // Hide popup after 3 seconds (longer duration since it's only shown once)
+                // Hide popup after 2 seconds
                 setTimeout(() => {
                     this.lyricsPopup.classList.remove('show');
                     this.lyricsPopup.classList.add('hide');
-                }, 3000);
+                }, 2000);
             }
 
             showCenterCardLyrics(currentText) {
@@ -936,11 +956,11 @@ Wish it weren't true</span>
                 this.lyricCard.classList.remove('hide');
                 this.lyricCard.classList.add('show');
                 
-                // Hide card after 3 seconds (longer duration since it's only shown once)
+                // Hide card after 2 seconds
                 setTimeout(() => {
                     this.lyricCard.classList.remove('show');
                     this.lyricCard.classList.add('hide');
-                }, 3000);
+                }, 2000);
             }
 
             updateLyricsProgress() {
