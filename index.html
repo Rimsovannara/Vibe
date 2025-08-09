@@ -716,8 +716,9 @@ Wish it weren't true</span>
                 this.currentVolume = 1;
                 this.isLoading = true;
                 this.lyricsEnabled = true;
+                this.lyricsMode = 'top'; // 'top' or 'center'
                 
-                // Lyrics timing data (in seconds)
+                // Enhanced lyrics timing data (in seconds)
                 this.lyricsData = [
                     { time: 0, text: "Maybe I lost my mind", next: "No one noticed" },
                     { time: 2, text: "No one noticed", next: "Maybe I lost my mind" },
@@ -752,6 +753,7 @@ Wish it weren't true</span>
                 ];
                 
                 this.currentLyricIndex = 0;
+                this.lastLyricTime = 0;
                 
                 this.initializeElements();
                 this.setupEventListeners();
@@ -776,6 +778,10 @@ Wish it weren't true</span>
                 this.currentLyricElement = document.getElementById('currentLyric');
                 this.nextLyricElement = document.getElementById('nextLyric');
                 this.lyricsProgressElement = document.getElementById('lyricsProgress');
+                this.lyricsProgressFill = document.getElementById('lyricsProgressFill');
+                this.lyricsModeToggle = document.getElementById('lyricsModeToggle');
+                this.lyricsCards = document.getElementById('lyricsCards');
+                this.lyricCard = document.getElementById('lyricCard');
             }
 
             setupEventListeners() {
@@ -785,6 +791,7 @@ Wish it weren't true</span>
                 this.progressBar.addEventListener('click', (e) => this.seek(e));
                 this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
                 this.lyricsToggle.addEventListener('click', () => this.toggleLyrics());
+                this.lyricsModeToggle.addEventListener('click', () => this.toggleLyricsMode());
                 
                 this.audio.addEventListener('timeupdate', () => this.updateProgress());
                 this.audio.addEventListener('loadedmetadata', () => this.onLoadedMetadata());
@@ -899,12 +906,22 @@ Wish it weren't true</span>
                     }
                 }
                 
-                if (currentLyric && currentLyric.text !== this.currentLyricElement.textContent) {
-                    this.showLyricsPopup(currentLyric.text, currentLyric.next);
+                // Only update if we have a new lyric and enough time has passed
+                if (currentLyric && currentLyric.text !== this.lastLyricTime) {
+                    this.lastLyricTime = currentLyric.text;
+                    this.showLyrics(currentLyric.text, currentLyric.next);
                 }
             }
 
-            showLyricsPopup(currentText, nextText) {
+            showLyrics(currentText, nextText) {
+                if (this.lyricsMode === 'top') {
+                    this.showTopBarLyrics(currentText, nextText);
+                } else {
+                    this.showCenterCardLyrics(currentText);
+                }
+            }
+
+            showTopBarLyrics(currentText, nextText) {
                 this.currentLyricElement.textContent = currentText;
                 this.nextLyricElement.textContent = nextText;
                 
@@ -912,11 +929,46 @@ Wish it weren't true</span>
                 this.lyricsPopup.classList.remove('hide');
                 this.lyricsPopup.classList.add('show');
                 
+                // Update progress bar
+                this.updateLyricsProgress();
+                
                 // Hide popup after 2 seconds
                 setTimeout(() => {
                     this.lyricsPopup.classList.remove('show');
                     this.lyricsPopup.classList.add('hide');
                 }, 2000);
+            }
+
+            showCenterCardLyrics(currentText) {
+                this.lyricCard.textContent = currentText;
+                
+                // Show card with animation
+                this.lyricCard.classList.remove('hide');
+                this.lyricCard.classList.add('show');
+                
+                // Hide card after 2 seconds
+                setTimeout(() => {
+                    this.lyricCard.classList.remove('show');
+                    this.lyricCard.classList.add('hide');
+                }, 2000);
+            }
+
+            updateLyricsProgress() {
+                const currentTime = this.audio.currentTime;
+                const duration = this.audio.duration;
+                const progress = (currentTime / duration) * 100;
+                this.lyricsProgressFill.style.width = progress + '%';
+            }
+
+            toggleLyricsMode() {
+                this.lyricsMode = this.lyricsMode === 'top' ? 'center' : 'top';
+                this.lyricsModeToggle.textContent = this.lyricsMode === 'top' ? '🎵 Top Bar' : '🎵 Center Card';
+                
+                // Hide current display
+                this.lyricsPopup.classList.remove('show');
+                this.lyricsPopup.classList.add('hide');
+                this.lyricCard.classList.remove('show');
+                this.lyricCard.classList.add('hide');
             }
 
             updateTimeDisplay() {
