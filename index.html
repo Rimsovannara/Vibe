@@ -476,50 +476,56 @@
 
         /* Synchronized lyrics popup */
         .lyrics-popup {
-            position: absolute;
-            top: 50%;
+            position: fixed;
+            top: 20px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 20px 30px;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.95), rgba(78, 205, 196, 0.95));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 16px 24px;
             color: white;
-            font-size: 18px;
-            font-weight: 500;
+            font-size: 16px;
+            font-weight: 600;
             text-align: center;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            z-index: 100;
-            max-width: 300px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1000;
+            max-width: 280px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            transform-origin: center top;
         }
 
         .lyrics-popup.show {
             opacity: 1;
             visibility: visible;
-            transform: translate(-50%, -50%) scale(1);
+            transform: translateX(-50%) translateY(0) scale(1);
         }
 
         .lyrics-popup.hide {
             opacity: 0;
             visibility: hidden;
-            transform: translate(-50%, -50%) scale(0.9);
+            transform: translateX(-50%) translateY(-20px) scale(0.95);
         }
 
         .current-lyric {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #ff6b6b;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 0.5px;
         }
 
         .next-lyric {
-            font-size: 14px;
-            opacity: 0.7;
-            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            opacity: 0.8;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
         }
 
         /* Progress indicator for lyrics */
@@ -528,18 +534,100 @@
             bottom: 0;
             left: 0;
             height: 3px;
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
-            border-radius: 0 0 16px 16px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 0 0 20px 20px;
             transition: width 0.1s ease;
+        }
+
+        .lyrics-progress-fill {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 0 0 20px 20px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        /* Alternative lyrics display - floating cards */
+        .lyrics-cards {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .lyric-card {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.9), rgba(78, 205, 196, 0.9));
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px 30px;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            transform: translateY(30px) scale(0.9);
+            max-width: 320px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .lyric-card.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .lyric-card.hide {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-30px) scale(0.9);
+        }
+
+        /* Lyrics mode toggle */
+        .lyrics-mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            z-index: 1001;
+        }
+
+        .lyrics-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
     </style>
 </head>
 <body>
     <div class="player-container">
+        <button class="lyrics-mode-toggle" id="lyricsModeToggle">🎵 Top Bar</button>
+        
         <div class="lyrics-popup" id="lyricsPopup">
             <div class="current-lyric" id="currentLyric"></div>
             <div class="next-lyric" id="nextLyric"></div>
-            <div class="lyrics-progress" id="lyricsProgress"></div>
+            <div class="lyrics-progress" id="lyricsProgress">
+                <div class="lyrics-progress-fill" id="lyricsProgressFill"></div>
+            </div>
+        </div>
+
+        <div class="lyrics-cards" id="lyricsCards">
+            <div class="lyric-card" id="lyricCard"></div>
         </div>
         
         <div class="player" id="player">
