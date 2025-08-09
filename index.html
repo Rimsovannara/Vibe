@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe-1 - Audio Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .album-art {
+            width: 200px;
+            height: 200px;
+            border-radius: 15px;
+            margin: 0 auto 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            object-fit: cover;
+        }
+
+        .song-info {
+            margin-bottom: 30px;
+        }
+
+        .song-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .artist {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .album {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .audio-player audio {
+            width: 100%;
+            height: 50px;
+            border-radius: 25px;
+            outline: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .volume-slider {
+            width: 100px;
+            height: 5px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status.playing {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+        }
+
+        .status.paused {
+            background: rgba(255, 152, 0, 0.1);
+            color: #ff9800;
+        }
+
+        .status.stopped {
+            background: rgba(158, 158, 158, 0.1);
+            color: #9e9e9e;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .album-art {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .song-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="The_Marías_-_No_One_Noticed_(Extended).png" alt="Album Art" class="album-art">
+        
+        <div class="song-info">
+            <div class="song-title">No One Noticed</div>
+            <div class="artist">The Marías</div>
+            <div class="album">Extended Version</div>
+        </div>
+
+        <audio id="audioPlayer" class="audio-player" controls preload="metadata">
+            <source src="The Marías - No One Noticed.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+
+        <div class="controls">
+            <button class="control-btn" onclick="playAudio()">Play</button>
+            <button class="control-btn" onclick="pauseAudio()">Pause</button>
+            <button class="control-btn" onclick="stopAudio()">Stop</button>
+        </div>
+
+        <div class="volume-control">
+            <span>🔊</span>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.1" value="0.7">
+            <span id="volumeValue">70%</span>
+        </div>
+
+        <div class="status" id="status">Ready to play</div>
+    </div>
+
+    <script>
+        const audio = document.getElementById('audioPlayer');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
+        const status = document.getElementById('status');
+
+        // Set initial volume
+        audio.volume = 0.7;
+
+        // Volume control
+        volumeSlider.addEventListener('input', function() {
+            audio.volume = this.value;
+            volumeValue.textContent = Math.round(this.value * 100) + '%';
+        });
+
+        // Play function
+        function playAudio() {
+            audio.play();
+            updateStatus('playing');
+        }
+
+        // Pause function
+        function pauseAudio() {
+            audio.pause();
+            updateStatus('paused');
+        }
+
+        // Stop function
+        function stopAudio() {
+            audio.pause();
+            audio.currentTime = 0;
+            updateStatus('stopped');
+        }
+
+        // Update status
+        function updateStatus(state) {
+            status.className = 'status ' + state;
+            switch(state) {
+                case 'playing':
+                    status.textContent = 'Now Playing';
+                    break;
+                case 'paused':
+                    status.textContent = 'Paused';
+                    break;
+                case 'stopped':
+                    status.textContent = 'Stopped';
+                    break;
+            }
+        }
+
+        // Audio event listeners
+        audio.addEventListener('play', () => updateStatus('playing'));
+        audio.addEventListener('pause', () => updateStatus('paused'));
+        audio.addEventListener('ended', () => updateStatus('stopped'));
+        audio.addEventListener('loadstart', () => status.textContent = 'Loading...');
+        audio.addEventListener('canplay', () => status.textContent = 'Ready to play');
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    if (audio.paused) {
+                        playAudio();
+                    } else {
+                        pauseAudio();
+                    }
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    audio.currentTime = Math.max(0, audio.currentTime - 10);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
