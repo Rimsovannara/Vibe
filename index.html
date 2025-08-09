@@ -473,10 +473,75 @@
             color: white;
             margin: 20px 0;
         }
+
+        /* Synchronized lyrics popup */
+        .lyrics-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px 30px;
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 100;
+            max-width: 300px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .lyrics-popup.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .lyrics-popup.hide {
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+
+        .current-lyric {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #ff6b6b;
+        }
+
+        .next-lyric {
+            font-size: 14px;
+            opacity: 0.7;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Progress indicator for lyrics */
+        .lyrics-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            border-radius: 0 0 16px 16px;
+            transition: width 0.1s ease;
+        }
     </style>
 </head>
 <body>
     <div class="player-container">
+        <div class="lyrics-popup" id="lyricsPopup">
+            <div class="current-lyric" id="currentLyric"></div>
+            <div class="next-lyric" id="nextLyric"></div>
+            <div class="lyrics-progress" id="lyricsProgress"></div>
+        </div>
+        
         <div class="player" id="player">
             <div class="album-art" id="albumArt"></div>
             
@@ -562,6 +627,43 @@ Wish it weren't true</span>
                 this.isPlaying = false;
                 this.currentVolume = 1;
                 this.isLoading = true;
+                this.lyricsEnabled = true;
+                
+                // Lyrics timing data (in seconds)
+                this.lyricsData = [
+                    { time: 0, text: "Maybe I lost my mind", next: "No one noticed" },
+                    { time: 2, text: "No one noticed", next: "Maybe I lost my mind" },
+                    { time: 4, text: "Maybe I lost my mind", next: "No one noticed" },
+                    { time: 6, text: "No one noticed", next: "No one tried to read my eyes" },
+                    { time: 8, text: "No one tried to read my eyes", next: "No one but you" },
+                    { time: 10, text: "No one but you", next: "Wish it weren't true" },
+                    { time: 12, text: "Wish it weren't true", next: "No one tried to read my eyes" },
+                    { time: 14, text: "No one tried to read my eyes", next: "No one but you" },
+                    { time: 16, text: "No one but you", next: "Wish it weren't true" },
+                    { time: 18, text: "Wish it weren't true", next: "Maybe I lost my mind" },
+                    { time: 20, text: "Maybe I lost my mind", next: "No one noticed" },
+                    { time: 22, text: "No one noticed", next: "Maybe I lost my mind" },
+                    { time: 24, text: "Maybe I lost my mind", next: "No one noticed" },
+                    { time: 26, text: "No one noticed", next: "No one tried to read my eyes" },
+                    { time: 28, text: "No one tried to read my eyes", next: "No one but you" },
+                    { time: 30, text: "No one but you", next: "Wish it weren't true" },
+                    { time: 32, text: "Wish it weren't true", next: "No one tried to read my eyes" },
+                    { time: 34, text: "No one tried to read my eyes", next: "No one but you" },
+                    { time: 36, text: "No one but you", next: "Wish it weren't true" },
+                    { time: 38, text: "Wish it weren't true", next: "Maybe I lost my mind" },
+                    { time: 40, text: "Maybe I lost my mind", next: "No one noticed" },
+                    { time: 42, text: "No one noticed", next: "Maybe I lost my mind" },
+                    { time: 44, text: "Maybe I lost my mind", next: "No one noticed" },
+                    { time: 46, text: "No one noticed", next: "No one tried to read my eyes" },
+                    { time: 48, text: "No one tried to read my eyes", next: "No one but you" },
+                    { time: 50, text: "No one but you", next: "Wish it weren't true" },
+                    { time: 52, text: "Wish it weren't true", next: "No one tried to read my eyes" },
+                    { time: 54, text: "No one tried to read my eyes", next: "No one but you" },
+                    { time: 56, text: "No one but you", next: "Wish it weren't true" },
+                    { time: 58, text: "Wish it weren't true", next: "" }
+                ];
+                
+                this.currentLyricIndex = 0;
                 
                 this.initializeElements();
                 this.setupEventListeners();
@@ -582,6 +684,10 @@ Wish it weren't true</span>
                 this.albumArt = document.getElementById('albumArt');
                 this.lyricsToggle = document.getElementById('lyricsToggle');
                 this.lyricsContent = document.getElementById('lyricsContent');
+                this.lyricsPopup = document.getElementById('lyricsPopup');
+                this.currentLyricElement = document.getElementById('currentLyric');
+                this.nextLyricElement = document.getElementById('nextLyric');
+                this.lyricsProgressElement = document.getElementById('lyricsProgress');
             }
 
             setupEventListeners() {
@@ -684,6 +790,45 @@ Wish it weren't true</span>
                 const percent = (this.audio.currentTime / this.audio.duration) * 100;
                 this.progressFill.style.width = percent + '%';
                 this.updateTimeDisplay();
+                this.updateLyrics();
+            }
+
+            updateLyrics() {
+                if (!this.lyricsEnabled || !this.isPlaying) return;
+                
+                const currentTime = this.audio.currentTime;
+                
+                // Find the current lyric based on timing
+                let currentLyric = null;
+                let nextLyric = null;
+                
+                for (let i = 0; i < this.lyricsData.length; i++) {
+                    if (currentTime >= this.lyricsData[i].time) {
+                        currentLyric = this.lyricsData[i];
+                        nextLyric = this.lyricsData[i + 1] || { text: "", next: "" };
+                    } else {
+                        break;
+                    }
+                }
+                
+                if (currentLyric && currentLyric.text !== this.currentLyricElement.textContent) {
+                    this.showLyricsPopup(currentLyric.text, currentLyric.next);
+                }
+            }
+
+            showLyricsPopup(currentText, nextText) {
+                this.currentLyricElement.textContent = currentText;
+                this.nextLyricElement.textContent = nextText;
+                
+                // Show popup with animation
+                this.lyricsPopup.classList.remove('hide');
+                this.lyricsPopup.classList.add('show');
+                
+                // Hide popup after 2 seconds
+                setTimeout(() => {
+                    this.lyricsPopup.classList.remove('show');
+                    this.lyricsPopup.classList.add('hide');
+                }, 2000);
             }
 
             updateTimeDisplay() {
@@ -723,6 +868,14 @@ Wish it weren't true</span>
                 const isVisible = this.lyricsContent.classList.contains('show');
                 this.lyricsContent.classList.toggle('show', !isVisible);
                 this.lyricsToggle.textContent = isVisible ? '📜 Show Lyrics' : '📜 Hide Lyrics';
+            }
+
+            toggleSyncedLyrics() {
+                this.lyricsEnabled = !this.lyricsEnabled;
+                if (!this.lyricsEnabled) {
+                    this.lyricsPopup.classList.remove('show');
+                    this.lyricsPopup.classList.add('hide');
+                }
             }
         }
 
