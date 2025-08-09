@@ -3,354 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe - Audio Player</title>
+    <title>Audio Player</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
             padding: 20px;
-        }
-
-        .audio-player {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .player-header {
-            margin-bottom: 30px;
-        }
-
-        .player-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .player-subtitle {
-            font-size: 16px;
-            color: #666;
-            font-weight: 400;
-        }
-
-        .album-art {
-            width: 200px;
-            height: 200px;
-            border-radius: 15px;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            margin: 0 auto 30px;
+            background: #f5f5f5;
             display: flex;
-            align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            align-items: center;
+            min-height: 100vh;
         }
 
-        .album-art::before {
-            content: "♪";
-            font-size: 60px;
-            color: white;
+        .player {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 350px;
         }
 
-        .song-info {
-            margin-bottom: 30px;
-        }
-
-        .song-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
+        .title {
+            font-size: 18px;
+            font-weight: 500;
             margin-bottom: 5px;
+            color: #333;
         }
 
-        .song-artist {
-            font-size: 16px;
+        .artist {
+            font-size: 14px;
             color: #666;
-        }
-
-        .progress-container {
             margin-bottom: 20px;
         }
 
-        .progress-bar {
+        .progress {
             width: 100%;
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            cursor: pointer;
-            position: relative;
+            height: 4px;
+            background: #eee;
+            border-radius: 2px;
             margin-bottom: 10px;
+            cursor: pointer;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 3px;
+            background: #007AFF;
+            border-radius: 2px;
             width: 0%;
-            transition: width 0.1s ease;
         }
 
-        .time-display {
+        .time {
             display: flex;
             justify-content: space-between;
-            font-size: 14px;
-            color: #666;
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 20px;
         }
 
         .controls {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 15px;
         }
 
-        .control-btn {
+        button {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 24px;
-            color: #333;
-            padding: 10px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 16px;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
         }
 
-        .control-btn:hover {
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-            transform: scale(1.1);
+        button:hover {
+            background: #f0f0f0;
         }
 
-        .play-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+        .play {
+            background: #007AFF;
             color: white;
-            font-size: 28px;
-            width: 60px;
-            height: 60px;
+            font-size: 18px;
+            padding: 12px 16px;
         }
 
-        .play-btn:hover {
-            background: linear-gradient(135deg, #5a6fd8, #6a4190);
-            transform: scale(1.05);
+        .play:hover {
+            background: #0056CC;
         }
 
-        .volume-container {
+        .volume {
+            margin-top: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-top: 20px;
         }
 
-        .volume-slider {
+        .volume input {
             flex: 1;
             height: 4px;
-            background: #e0e0e0;
+            background: #eee;
             border-radius: 2px;
-            cursor: pointer;
-            appearance: none;
+            outline: none;
         }
 
-        .volume-slider::-webkit-slider-thumb {
+        .volume input::-webkit-slider-thumb {
             appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #667eea;
+            width: 12px;
+            height: 12px;
+            background: #007AFF;
             border-radius: 50%;
             cursor: pointer;
-        }
-
-        .volume-slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            background: #667eea;
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-        }
-
-        .volume-icon {
-            font-size: 18px;
-            color: #666;
-            min-width: 20px;
-        }
-
-        @media (max-width: 480px) {
-            .audio-player {
-                padding: 30px 20px;
-            }
-            
-            .album-art {
-                width: 150px;
-                height: 150px;
-            }
-            
-            .controls {
-                gap: 15px;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="audio-player">
-        <div class="player-header">
-            <div class="player-title">Vibe</div>
-            <div class="player-subtitle">Music Player</div>
+    <div class="player">
+        <div class="title">No One Noticed</div>
+        <div class="artist">The Marías</div>
+        
+        <div class="progress" id="progress">
+            <div class="progress-fill" id="progressFill"></div>
         </div>
-
-        <div class="album-art"></div>
-
-        <div class="song-info">
-            <div class="song-title">No One Noticed</div>
-            <div class="song-artist">The Marías</div>
+        
+        <div class="time">
+            <span id="currentTime">0:00</span>
+            <span id="duration">0:00</span>
         </div>
-
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div class="time-display">
-                <span id="currentTime">0:00</span>
-                <span id="duration">0:00</span>
-            </div>
-        </div>
-
+        
         <div class="controls">
-            <button class="control-btn" id="prevBtn">⏮</button>
-            <button class="control-btn play-btn" id="playBtn">▶</button>
-            <button class="control-btn" id="nextBtn">⏭</button>
+            <button id="prev">⏮</button>
+            <button class="play" id="play">▶</button>
+            <button id="next">⏭</button>
         </div>
-
-        <div class="volume-container">
-            <span class="volume-icon">🔊</span>
-            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
+        
+        <div class="volume">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="100" value="100">
         </div>
     </div>
 
     <script>
-        class AudioPlayer {
-            constructor() {
-                this.audio = new Audio("The Marías - No One Noticed.mp3");
-                this.isPlaying = false;
-                this.currentVolume = 1;
-                
-                this.initializeElements();
-                this.setupEventListeners();
-                this.updateTimeDisplay();
-            }
+        const audio = new Audio("The Marías - No One Noticed.mp3");
+        const playBtn = document.getElementById('play');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const currentTime = document.getElementById('currentTime');
+        const duration = document.getElementById('duration');
+        const volume = document.getElementById('volume');
 
-            initializeElements() {
-                this.playBtn = document.getElementById('playBtn');
-                this.prevBtn = document.getElementById('prevBtn');
-                this.nextBtn = document.getElementById('nextBtn');
-                this.progressBar = document.getElementById('progressBar');
-                this.progressFill = document.getElementById('progressFill');
-                this.currentTimeSpan = document.getElementById('currentTime');
-                this.durationSpan = document.getElementById('duration');
-                this.volumeSlider = document.getElementById('volumeSlider');
-            }
+        let isPlaying = false;
 
-            setupEventListeners() {
-                this.playBtn.addEventListener('click', () => this.togglePlay());
-                this.prevBtn.addEventListener('click', () => this.previous());
-                this.nextBtn.addEventListener('click', () => this.next());
-                this.progressBar.addEventListener('click', (e) => this.seek(e));
-                this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
-                
-                this.audio.addEventListener('timeupdate', () => this.updateProgress());
-                this.audio.addEventListener('loadedmetadata', () => this.updateTimeDisplay());
-                this.audio.addEventListener('ended', () => this.handleEnded());
-            }
+        playBtn.addEventListener('click', togglePlay);
+        prevBtn.addEventListener('click', () => audio.currentTime = 0);
+        nextBtn.addEventListener('click', () => audio.currentTime = audio.duration);
+        progress.addEventListener('click', seek);
+        volume.addEventListener('input', (e) => audio.volume = e.target.value / 100);
 
-            togglePlay() {
-                if (this.isPlaying) {
-                    this.pause();
-                } else {
-                    this.play();
-                }
-            }
+        audio.addEventListener('timeupdate', updateProgress);
+        audio.addEventListener('loadedmetadata', updateTime);
+        audio.addEventListener('ended', () => {
+            isPlaying = false;
+            playBtn.textContent = '▶';
+        });
 
-            play() {
-                this.audio.play();
-                this.isPlaying = true;
-                this.playBtn.textContent = '⏸';
+        function togglePlay() {
+            if (isPlaying) {
+                audio.pause();
+                playBtn.textContent = '▶';
+            } else {
+                audio.play();
+                playBtn.textContent = '⏸';
             }
-
-            pause() {
-                this.audio.pause();
-                this.isPlaying = false;
-                this.playBtn.textContent = '▶';
-            }
-
-            previous() {
-                this.audio.currentTime = 0;
-            }
-
-            next() {
-                this.audio.currentTime = this.audio.duration;
-            }
-
-            seek(e) {
-                const rect = this.progressBar.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                this.audio.currentTime = percent * this.audio.duration;
-            }
-
-            setVolume(value) {
-                const volume = value / 100;
-                this.audio.volume = volume;
-                this.currentVolume = volume;
-            }
-
-            updateProgress() {
-                const percent = (this.audio.currentTime / this.audio.duration) * 100;
-                this.progressFill.style.width = percent + '%';
-                this.updateTimeDisplay();
-            }
-
-            updateTimeDisplay() {
-                this.currentTimeSpan.textContent = this.formatTime(this.audio.currentTime);
-                this.durationSpan.textContent = this.formatTime(this.audio.duration);
-            }
-
-            formatTime(seconds) {
-                if (isNaN(seconds)) return '0:00';
-                const mins = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${mins}:${secs.toString().padStart(2, '0')}`;
-            }
-
-            handleEnded() {
-                this.isPlaying = false;
-                this.playBtn.textContent = '▶';
-                this.progressFill.style.width = '0%';
-            }
+            isPlaying = !isPlaying;
         }
 
-        // Initialize the audio player when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new AudioPlayer();
-        });
+        function updateProgress() {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progressFill.style.width = percent + '%';
+            currentTime.textContent = formatTime(audio.currentTime);
+        }
+
+        function updateTime() {
+            duration.textContent = formatTime(audio.duration);
+        }
+
+        function seek(e) {
+            const rect = progress.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = percent * audio.duration;
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
     </script>
 </body>
 </html>
