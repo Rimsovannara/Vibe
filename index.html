@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SOVANNARA | Thanks AI</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TRX98DPF0N"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-TRX98DPF0N');
+    </script>
+    
     <style>
         html, body {
             height: 100%;
@@ -45,5 +56,54 @@
             Your browser does not support the audio element.
         </audio>
     </div>
+
+    <!-- Additional Tracking Scripts -->
+    <script>
+        // Track page load time
+        window.addEventListener('load', function() {
+            const loadTime = performance.now();
+            console.log('Page loaded in:', loadTime.toFixed(2), 'ms');
+            
+            // Send to Google Analytics if available
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'timing_complete', {
+                    name: 'load',
+                    value: Math.round(loadTime)
+                });
+            }
+        });
+
+        // Track audio interactions
+        const audio = document.querySelector('audio');
+        if (audio) {
+            audio.addEventListener('play', function() {
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'audio_play', {
+                        event_category: 'audio',
+                        event_label: 'The Marías - No One Noticed'
+                    });
+                }
+            });
+
+            audio.addEventListener('pause', function() {
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'audio_pause', {
+                        event_category: 'audio',
+                        event_label: 'The Marías - No One Noticed'
+                    });
+                }
+            });
+        }
+
+        // Track page visibility changes
+        document.addEventListener('visibilitychange', function() {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'visibility_change', {
+                    event_category: 'engagement',
+                    event_label: document.hidden ? 'hidden' : 'visible'
+                });
+            }
+        });
+    </script>
 </body>
 </html>
