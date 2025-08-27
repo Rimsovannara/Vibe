@@ -51,7 +51,7 @@
 </head>
 <body>
     <div class="player-container">
-        <audio controls preload="metadata">
+        <audio controls preload="metadata" autoplay loop>
             <source src="The Marías - No One Noticed.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
@@ -59,6 +59,43 @@
 
     <!-- Additional Tracking Scripts -->
     <script>
+        // Ensure autoplay works and handle autoplay restrictions
+        const audio = document.querySelector('audio');
+        
+        // Function to start playing
+        function startPlaying() {
+            if (audio) {
+                audio.play().catch(function(error) {
+                    console.log('Autoplay prevented:', error);
+                    // Show a message to user to click to start
+                    const playerContainer = document.querySelector('.player-container');
+                    if (playerContainer) {
+                        const clickMessage = document.createElement('div');
+                        clickMessage.innerHTML = '<p style="color: #888; margin-top: 10px; font-size: 14px;">Click anywhere to start playing</p>';
+                        playerContainer.appendChild(clickMessage);
+                        
+                        // Allow clicking anywhere to start
+                        playerContainer.addEventListener('click', function() {
+                            audio.play();
+                            clickMessage.remove();
+                        }, { once: true });
+                    }
+                });
+            }
+        }
+
+        // Try to autoplay when page loads
+        window.addEventListener('load', function() {
+            startPlaying();
+        });
+
+        // Also try when user interacts with the page
+        document.addEventListener('click', function() {
+            if (audio && audio.paused) {
+                startPlaying();
+            }
+        }, { once: true });
+
         // Track page load time
         window.addEventListener('load', function() {
             const loadTime = performance.now();
@@ -74,7 +111,6 @@
         });
 
         // Track audio interactions
-        const audio = document.querySelector('audio');
         if (audio) {
             audio.addEventListener('play', function() {
                 if (typeof gtag !== 'undefined') {
@@ -92,6 +128,17 @@
                         event_label: 'The Marías - No One Noticed'
                     });
                 }
+            });
+
+            // Track when song ends and loops
+            audio.addEventListener('ended', function() {
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'audio_loop', {
+                        event_category: 'audio',
+                        event_label: 'The Marías - No One Noticed'
+                    });
+                }
+                console.log('Song ended, looping...');
             });
         }
 
