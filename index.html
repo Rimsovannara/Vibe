@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Listen to 'The Marías - No One Noticed' with our beautiful audio player">
     <title>SOVANNARA | Thanks AI</title>
     
     <!-- Google tag (gtag.js) -->
@@ -50,58 +51,123 @@
     </style>
 </head>
 <body>
-    <div class="player-container">
-        <audio controls preload="metadata" autoplay loop>
+    <div class="player-container" role="main" aria-label="Audio Player">
+        <audio 
+            controls 
+            preload="metadata" 
+            autoplay 
+            loop
+            aria-label="Audio player for No One Noticed by The Marías"
+            title="No One Noticed - The Marías">
             <source src="The Marías - No One Noticed.mp3" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
     </div>
 
-    <!-- Additional Tracking Scripts -->
+    <!-- Enhanced JavaScript with better functionality -->
     <script>
-        // Ensure autoplay works and handle autoplay restrictions
-        const audio = document.querySelector('audio');
-        
-        // Function to start playing
-        function startPlaying() {
-            if (audio) {
-                audio.play().catch(function(error) {
-                    console.log('Autoplay prevented:', error);
-                    // Show a message to user to click to start
-                    const playerContainer = document.querySelector('.player-container');
-                    if (playerContainer) {
-                        const clickMessage = document.createElement('div');
-                        clickMessage.innerHTML = '<p style="color: #888; margin-top: 10px; font-size: 14px;">Click anywhere to start playing</p>';
-                        playerContainer.appendChild(clickMessage);
-                        
-                        // Allow clicking anywhere to start
-                        playerContainer.addEventListener('click', function() {
-                            audio.play();
-                            clickMessage.remove();
-                        }, { once: true });
+        // Enhanced audio player functionality
+        class AudioPlayer {
+            constructor() {
+                this.audio = document.querySelector('audio');
+                this.playerContainer = document.querySelector('.player-container');
+                this.init();
+            }
+
+            init() {
+                if (this.audio) {
+                    this.setupEventListeners();
+                    this.handleAutoplay();
+                }
+            }
+
+            setupEventListeners() {
+                // Audio event listeners
+                this.audio.addEventListener('play', () => {
+                    this.trackEvent('audio_play');
+                });
+
+                this.audio.addEventListener('pause', () => {
+                    this.trackEvent('audio_pause');
+                });
+
+                this.audio.addEventListener('ended', () => {
+                    this.trackEvent('audio_loop');
+                    console.log('Song ended, looping...');
+                });
+
+                // User interaction listeners
+                document.addEventListener('click', () => {
+                    if (this.audio && this.audio.paused) {
+                        this.startPlaying();
+                    }
+                }, { once: true });
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.togglePlayPause();
                     }
                 });
             }
+
+            startPlaying() {
+                if (this.audio) {
+                    this.audio.play().catch((error) => {
+                        console.log('Autoplay prevented:', error);
+                        this.showClickMessage();
+                    });
+                }
+            }
+
+            togglePlayPause() {
+                if (this.audio) {
+                    if (this.audio.paused) {
+                        this.audio.play();
+                    } else {
+                        this.audio.pause();
+                    }
+                }
+            }
+
+            showClickMessage() {
+                const existingMessage = this.playerContainer.querySelector('.click-message');
+                if (!existingMessage) {
+                    const clickMessage = document.createElement('div');
+                    clickMessage.innerHTML = '<p style="color: #888; margin-top: 10px; font-size: 14px;">Click anywhere to start playing</p>';
+                    clickMessage.className = 'click-message';
+                    this.playerContainer.appendChild(clickMessage);
+                    
+                    this.playerContainer.addEventListener('click', () => {
+                        this.audio.play();
+                        clickMessage.remove();
+                    }, { once: true });
+                }
+            }
+
+            handleAutoplay() {
+                window.addEventListener('load', () => {
+                    this.startPlaying();
+                });
+            }
+
+            trackEvent(eventName, additionalData = {}) {
+                if (typeof gtag !== 'undefined') {
+                    const defaultData = {
+                        event_category: 'audio',
+                        event_label: 'The Marías - No One Noticed'
+                    };
+                    gtag('event', eventName, { ...defaultData, ...additionalData });
+                }
+            }
         }
 
-        // Try to autoplay when page loads
-        window.addEventListener('load', function() {
-            startPlaying();
-        });
-
-        // Also try when user interacts with the page
-        document.addEventListener('click', function() {
-            if (audio && audio.paused) {
-                startPlaying();
-            }
-        }, { once: true });
-
-        // Track page load time
+        // Performance tracking
         window.addEventListener('load', function() {
             const loadTime = performance.now();
             console.log('Page loaded in:', loadTime.toFixed(2), 'ms');
             
-            // Send to Google Analytics if available
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'timing_complete', {
                     name: 'load',
@@ -110,39 +176,7 @@
             }
         });
 
-        // Track audio interactions
-        if (audio) {
-            audio.addEventListener('play', function() {
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'audio_play', {
-                        event_category: 'audio',
-                        event_label: 'The Marías - No One Noticed'
-                    });
-                }
-            });
-
-            audio.addEventListener('pause', function() {
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'audio_pause', {
-                        event_category: 'audio',
-                        event_label: 'The Marías - No One Noticed'
-                    });
-                }
-            });
-
-            // Track when song ends and loops
-            audio.addEventListener('ended', function() {
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'audio_loop', {
-                        event_category: 'audio',
-                        event_label: 'The Marías - No One Noticed'
-                    });
-                }
-                console.log('Song ended, looping...');
-            });
-        }
-
-        // Track page visibility changes
+        // Page visibility tracking
         document.addEventListener('visibilitychange', function() {
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'visibility_change', {
@@ -151,6 +185,9 @@
                 });
             }
         });
+
+        // Initialize the audio player
+        const player = new AudioPlayer();
     </script>
 </body>
 </html>
