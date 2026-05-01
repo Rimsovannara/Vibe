@@ -62,8 +62,7 @@ body::before {
 .hero-copy,
 .hero-panel,
 .player-card,
-.queue-card,
-.playlist-card {
+.queue-card {
     position: relative;
     overflow: hidden;
     background: var(--surface);
@@ -80,7 +79,7 @@ body::before {
 
 .hero-copy::after,
 .player-card::after,
-.playlist-card::after {
+.queue-card::after {
     content: "";
     position: absolute;
     inset: auto -70px -80px auto;
@@ -198,8 +197,7 @@ body::before {
 }
 
 .player-card,
-.queue-card,
-.playlist-card {
+.queue-card {
     padding: 24px;
     animation: card-rise 520ms ease both;
 }
@@ -467,54 +465,6 @@ body::before {
     color: var(--accent-soft);
 }
 
-.playlist-card {
-    grid-column: 1 / -1;
-    display: grid;
-    gap: 18px;
-}
-
-.playlist-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 18px;
-}
-
-.playlist-item,
-.playlist-empty {
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
-    padding: 18px;
-}
-
-.playlist-item iframe {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    border: 0;
-    border-radius: 18px;
-    margin-top: 14px;
-}
-
-.playlist-item h3,
-.playlist-empty h3 {
-    margin: 0;
-    font-size: 1.08rem;
-}
-
-.playlist-item p,
-.playlist-empty p {
-    margin: 10px 0 0;
-    line-height: 1.65;
-    color: var(--muted);
-}
-
-.playlist-link {
-    display: inline-flex;
-    margin-top: 14px;
-    color: var(--accent-soft);
-    text-decoration: none;
-}
-
 .sr-only {
     position: absolute;
     width: 1px;
@@ -571,8 +521,7 @@ a:focus-visible {
     .hero-copy,
     .hero-panel,
     .player-card,
-    .queue-card,
-    .playlist-card {
+    .queue-card {
         padding: 20px;
         border-radius: 24px;
     }

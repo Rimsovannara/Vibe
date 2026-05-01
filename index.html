@@ -26,14 +26,13 @@
                 <p class="eyebrow">Vibe</p>
                 <h1>A better home for the tracks you keep coming back to.</h1>
                 <p class="hero-text">
-                    The player now has a proper interface, a real queue, and an MP3-only setup for local
-                    files or direct audio links.
+                    The page keeps only what matters: one strong player and one clear track list.
                 </p>
                 <div class="hero-actions">
                     <button class="button button-primary" type="button" data-action="toggle-play">
                         Play current track
                     </button>
-                    <a class="button button-secondary" href="#library">Jump to library</a>
+                    <a class="button button-secondary" href="#tracks">Jump to tracks</a>
                 </div>
             </div>
 
@@ -41,7 +40,7 @@
                 <p class="eyebrow">Current mood</p>
                 <p class="hero-panel-title" id="track-mood">Late-night replay energy.</p>
                 <p class="hero-panel-copy" id="track-note">
-                    One local MP3 is loaded now, and the library section is set up for more MP3 files next.
+                    One local MP3 is loaded now, with the rest of the collection kept in one clean track panel.
                 </p>
             </aside>
         </header>
@@ -111,11 +110,11 @@
                 </noscript>
             </section>
 
-            <section class="queue-card" aria-labelledby="queue-title">
+            <section class="queue-card" id="tracks" aria-labelledby="queue-title">
                 <div class="section-heading">
                     <div>
-                        <p class="eyebrow">Queue</p>
-                        <h2 id="queue-title">Track list</h2>
+                        <p class="eyebrow">Tracks</p>
+                        <h2 id="queue-title">Choose a track</h2>
                     </div>
                     <p class="section-count" id="track-count">1 track</p>
                 </div>
@@ -123,25 +122,8 @@
                 <ol class="track-list" id="track-list"></ol>
 
                 <p class="panel-note">
-                    Add more MP3 tracks by editing the <code>tracks</code> array in <code>assets/js/app.js</code>.
+                    Tap any track to load it. Add more MP3 tracks in <code>assets/js/app.js</code>.
                 </p>
-            </section>
-
-            <section class="playlist-card" id="library" aria-labelledby="library-title">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">Library</p>
-                        <h2 id="library-title">MP3 sources</h2>
-                    </div>
-                    <p class="section-count" id="source-count">Ready for files</p>
-                </div>
-
-                <p class="panel-note">
-                    Use local files like <code>./assets/audio/song.mp3</code> or direct MP3 URLs in the
-                    <code>tracks</code> array in <code>assets/js/app.js</code>. YouTube links are not used here.
-                </p>
-
-                <div class="playlist-grid" id="source-grid"></div>
             </section>
         </main>
     </div>

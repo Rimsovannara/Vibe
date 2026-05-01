@@ -71,8 +71,6 @@ class VibePlayer {
         this.statusPill = document.getElementById("status-pill");
         this.helperText = document.getElementById("helper-text");
         this.playerVisual = document.getElementById("player-visual");
-        this.sourceGrid = document.getElementById("source-grid");
-        this.sourceCount = document.getElementById("source-count");
         this.heroPlayButton = document.querySelector('[data-action="toggle-play"]');
 
         this.handleFirstInteraction = () => {
@@ -99,7 +97,6 @@ class VibePlayer {
         this.audio.playsInline = true;
 
         this.renderTrackList();
-        this.renderSourceCards();
         this.registerServiceWorker();
         this.setupMediaSessionHandlers();
 
@@ -388,7 +385,7 @@ class VibePlayer {
             state.className = "track-state";
 
             title.textContent = track.title;
-            line.textContent = `${track.artist} - ${track.mood || "Mood line pending"}`;
+            line.textContent = `${track.artist} · ${getSourceLabel(track.src)} · ${track.mood || "Mood line pending"}`;
             state.textContent = "Ready";
 
             meta.append(title, line);
@@ -423,56 +420,6 @@ class VibePlayer {
             } else {
                 state.textContent = "Ready";
             }
-        });
-    }
-
-    renderSourceCards() {
-        if (!this.sourceGrid) {
-            return;
-        }
-
-        if (this.sourceCount) {
-            this.sourceCount.textContent = this.tracks.length
-                ? `${this.tracks.length} ${this.tracks.length === 1 ? "source" : "sources"}`
-                : "Ready for files";
-        }
-
-        if (!this.tracks.length) {
-            this.sourceGrid.innerHTML = `
-                <article class="playlist-empty">
-                    <h3>MP3 library is ready</h3>
-                    <p>
-                        Add direct MP3 files to the <code>tracks</code> array in <code>assets/js/app.js</code> and they
-                        will appear here automatically.
-                    </p>
-                </article>
-            `;
-            return;
-        }
-
-        this.sourceGrid.innerHTML = "";
-
-        this.tracks.forEach((track, index) => {
-            const card = document.createElement("article");
-            card.className = "playlist-item";
-
-            const title = document.createElement("h3");
-            title.textContent = track.title;
-
-            const description = document.createElement("p");
-            description.textContent = `${track.artist} · ${getSourceLabel(track.src)}`;
-
-            const source = document.createElement("p");
-            source.textContent = track.src;
-
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "button button-secondary";
-            button.textContent = "Load track";
-            button.addEventListener("click", () => this.loadTrack(index, true));
-
-            card.append(title, description, source, button);
-            this.sourceGrid.appendChild(card);
         });
     }
 
