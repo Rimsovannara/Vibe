@@ -29,6 +29,7 @@ import org.json.JSONObject;
 import fi.iki.elide.nanohttpd.NanoHTTPD;
 import fi.iki.elide.nanohttpd.NanoHTTPD.Response;
 import fi.iki.elide.nanohttpd.NanoHTTPD.IHTTPSession;
+import fi.iki.elide.nanohttpd.NanoHTTPD.Response.Status;
 
 import java.io.InputStream;
 
@@ -238,18 +239,18 @@ public final class MainActivity extends Activity {
         public Response serve(IHTTPSession session) {
             String uri = session.getUri();
             if (!uri.startsWith("/audio/")) {
-                return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
+                return newFixedLengthResponse(Status.NOT_FOUND, "text/plain", "Not Found");
             }
             
             String idStr = uri.substring(uri.lastIndexOf("/") + 1);
-            if (idStr.isEmpty()) return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Bad Request");
+            if (idStr.isEmpty()) return newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", "Bad Request");
 
             try {
                 long id = Long.parseLong(idStr);
                 Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
 
                 android.os.ParcelFileDescriptor pfd = resolver.openFileDescriptor(contentUri, "r");
-                if (pfd == null) return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
+                if (pfd == null) return newFixedLengthResponse(Status.NOT_FOUND, "text/plain", "Not Found");
 
                 java.io.FileInputStream fis = new java.io.FileInputStream(pfd.getFileDescriptor());
                 long fileLength = pfd.getStatSize();
@@ -266,7 +267,7 @@ public final class MainActivity extends Activity {
                 if (fileLength <= 0) {
                      fis.close();
                      pfd.close();
-                     return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Unknown File Length");
+                     return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Unknown File Length");
                 }
 
                 String mimeType = resolver.getType(contentUri);
@@ -291,7 +292,7 @@ public final class MainActivity extends Activity {
                     fis.getChannel().position(start);
                 }
 
-                Response res = newFixedLengthResponse(Response.Status.PARTIAL_CONTENT, mimeType, fis, contentLength);
+                Response res = newFixedLengthResponse(Status.PARTIAL_CONTENT, mimeType, fis, contentLength);
                 res.addHeader("Accept-Ranges", "bytes");
                 res.addHeader("Content-Length", String.valueOf(contentLength));
                 res.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
@@ -300,7 +301,7 @@ public final class MainActivity extends Activity {
                 return res;
             } catch (Exception e) {
                 Log.e("VibeApp", "AudioServer error", e);
-                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Error: " + e.getMessage());
+                return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Error: " + e.getMessage());
             }
         }
     }
