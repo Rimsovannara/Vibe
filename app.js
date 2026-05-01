@@ -6,6 +6,14 @@ const tracks = [
         mood: "Late-night replay energy.",
         note: "A softer opener for the queue while the broader library is still being built.",
         accent: "#ff8a5b"
+    },
+    {
+        title: "Illusionary Daytime x 室内系 TrackMaker [Extended Edit Version]",
+        artist: "Reis",
+        src: "./Illusionary Daytime x TrackMaker Extended Edit Version [8KI21GoNiuI].mp3",
+        mood: "Fast, bright instrumental energy.",
+        note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
+        accent: "#7ad7ff"
     }
 ];
 
