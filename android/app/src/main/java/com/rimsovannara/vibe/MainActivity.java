@@ -227,18 +227,63 @@ public final class MainActivity extends Activity {
                     long id = Long.parseLong(idStr);
                     Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
                     
-                    InputStream stream = getContentResolver().openInputStream(contentUri);
-                    if (stream == null) return null;
+                    android.os.ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(contentUri, "r");
+                    if (pfd == null) return null;
+                    
+                    long totalSize = pfd.getStatSize();
+                    java.io.FileInputStream fis = new java.io.FileInputStream(pfd.getFileDescriptor());
                     
                     String mimeType = getContentResolver().getType(contentUri);
                     if (mimeType == null) mimeType = "audio/mpeg";
                     
-                    java.util.Map<String, String> headers = new java.util.HashMap<>();
-                    headers.put("Access-Control-Allow-Origin", "*");
-                    headers.put("Content-Type", mimeType);
-                    headers.put("Cache-Control", "no-cache");
+                    java.util.Map<String, String> requestHeaders = request.getRequestHeaders();
+                    String range = requestHeaders != null ? requestHeaders.get("Range") : null;
                     
-                    return new WebResourceResponse(mimeType, null, 200, "OK", headers, stream);
+                    if (range != null && range.startsWith("bytes=")) {
+                        String[] bounds = range.substring(6).split("-");
+                        long start = Long.parseLong(bounds[0]);
+                        long end = bounds.length > 1 && !bounds[1].isEmpty() ? Long.parseLong(bounds[1]) : totalSize - 1;
+                        
+                        if (end > totalSize - 1) end = totalSize - 1;
+                        long length = end - start + 1;
+                        fis.getChannel().position(start);
+                        
+                        java.util.Map<String, String> headers = new java.util.HashMap<>();
+                        headers.put("Content-Range", "bytes " + start + "-" + end + "/" + totalSize);
+                        headers.put("Content-Length", String.valueOf(length));
+                        headers.put("Accept-Ranges", "bytes");
+                        headers.put("Content-Type", mimeType);
+                        headers.put("Access-Control-Allow-Origin", "*");
+                        
+                        // We must close the pfd when the stream closes. A custom stream isn't strictly necessary if Android handles it, but let's wrap it.
+                        InputStream wrappedStream = new InputStream() {
+                            @Override
+                            public int read() throws java.io.IOException { return fis.read(); }
+                            @Override
+                            public int read(byte[] b, int off, int len) throws java.io.IOException { return fis.read(b, off, len); }
+                            @Override
+                            public void close() throws java.io.IOException { fis.close(); pfd.close(); }
+                        };
+                        
+                        return new WebResourceResponse(mimeType, null, 206, "Partial Content", headers, wrappedStream);
+                    } else {
+                        java.util.Map<String, String> headers = new java.util.HashMap<>();
+                        headers.put("Content-Length", String.valueOf(totalSize));
+                        headers.put("Accept-Ranges", "bytes");
+                        headers.put("Content-Type", mimeType);
+                        headers.put("Access-Control-Allow-Origin", "*");
+                        
+                        InputStream wrappedStream = new InputStream() {
+                            @Override
+                            public int read() throws java.io.IOException { return fis.read(); }
+                            @Override
+                            public int read(byte[] b, int off, int len) throws java.io.IOException { return fis.read(b, off, len); }
+                            @Override
+                            public void close() throws java.io.IOException { fis.close(); pfd.close(); }
+                        };
+
+                        return new WebResourceResponse(mimeType, null, 200, "OK", headers, wrappedStream);
+                    }
                 } catch (Exception e) {
                     Log.e("VibeApp", "Failed to serve media", e);
                     return null;
