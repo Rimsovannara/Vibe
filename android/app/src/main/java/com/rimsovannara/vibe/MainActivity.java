@@ -92,7 +92,6 @@ public final class MainActivity extends Activity {
         assetLoader = new WebViewAssetLoader.Builder()
             .setDomain("appassets.androidplatform.net")
             .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
-            .addPathHandler("/device_audio/", new DeviceAudioPathHandler())
             .build();
 
         WebSettings settings = view.getSettings();
@@ -121,24 +120,6 @@ public final class MainActivity extends Activity {
 
         view.setWebChromeClient(new WebChromeClient());
         view.setWebViewClient(new LocalContentWebViewClient(assetLoader));
-    }
-
-    private final class DeviceAudioPathHandler implements WebViewAssetLoader.PathHandler {
-        @Nullable
-        @Override
-        public WebResourceResponse handle(String path) {
-            try {
-                String idStr = path.replaceAll("[^0-9]", "");
-                if (idStr.isEmpty()) return null;
-                long id = Long.parseLong(idStr);
-                Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
-                InputStream stream = getContentResolver().openInputStream(contentUri);
-                return new WebResourceResponse("audio/mpeg", null, stream);
-            } catch (Exception e) {
-                Log.e("VibeApp", "Failed to load audio: " + path, e);
-                return null;
-            }
-        }
     }
 
     private final class VibeAppInterface {
@@ -229,7 +210,7 @@ public final class MainActivity extends Activity {
         }).start();
     }
 
-    private static final class LocalContentWebViewClient extends WebViewClientCompat {
+    private final class LocalContentWebViewClient extends WebViewClientCompat {
         private final WebViewAssetLoader assetLoader;
 
         private LocalContentWebViewClient(WebViewAssetLoader assetLoader) {
@@ -238,13 +219,63 @@ public final class MainActivity extends Activity {
 
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+            Uri url = request.getUrl();
+            if ("appassets.androidplatform.net".equals(url.getHost()) && url.getPath() != null && url.getPath().startsWith("/device_audio/")) {
+                try {
+                    String idStr = url.getPath().replaceAll("[^0-9]", "");
+                    if (idStr.isEmpty()) return null;
+                    long id = Long.parseLong(idStr);
+                    Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+                    
+                    android.content.res.AssetFileDescriptor afd = getContentResolver().openAssetFileDescriptor(contentUri, "r");
+                    if (afd == null) return null;
+                    
+                    long totalSize = afd.getLength();
+                    java.io.FileInputStream fis = afd.createInputStream();
+                    
+                    java.util.Map<String, String> requestHeaders = request.getRequestHeaders();
+                    String range = requestHeaders != null ? requestHeaders.get("Range") : null;
+                    
+                    if (range != null && range.startsWith("bytes=")) {
+                        String[] bounds = range.substring(6).split("-");
+                        long start = Long.parseLong(bounds[0]);
+                        long end = bounds.length > 1 && !bounds[1].isEmpty() ? Long.parseLong(bounds[1]) : totalSize - 1;
+                        
+                        if (end > totalSize - 1) end = totalSize - 1;
+                        long length = end - start + 1;
+                        fis.skip(start);
+                        
+                        java.util.Map<String, String> headers = new java.util.HashMap<>();
+                        headers.put("Content-Range", "bytes " + start + "-" + end + "/" + totalSize);
+                        headers.put("Content-Length", String.valueOf(length));
+                        headers.put("Accept-Ranges", "bytes");
+                        headers.put("Content-Type", "audio/mpeg");
+                        
+                        return new WebResourceResponse("audio/mpeg", null, 206, "Partial Content", headers, fis);
+                    } else {
+                        java.util.Map<String, String> headers = new java.util.HashMap<>();
+                        headers.put("Content-Length", String.valueOf(totalSize));
+                        headers.put("Accept-Ranges", "bytes");
+                        headers.put("Content-Type", "audio/mpeg");
+                        
+                        return new WebResourceResponse("audio/mpeg", null, 200, "OK", headers, fis);
+                    }
+                } catch (Exception e) {
+                    Log.e("VibeApp", "Failed to serve media", e);
+                    return null;
+                }
+            }
             return assetLoader.shouldInterceptRequest(request.getUrl());
         }
 
         @Override
         @SuppressWarnings("deprecation")
         public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-            return assetLoader.shouldInterceptRequest(Uri.parse(url));
+            Uri parsedUrl = Uri.parse(url);
+            if ("appassets.androidplatform.net".equals(parsedUrl.getHost()) && parsedUrl.getPath() != null && parsedUrl.getPath().startsWith("/device_audio/")) {
+                 return null;
+            }
+            return assetLoader.shouldInterceptRequest(parsedUrl);
         }
     }
 }
