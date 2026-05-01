@@ -26,10 +26,10 @@ import androidx.webkit.WebViewClientCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import fi.iki.elide.nanohttpd.NanoHTTPD;
-import fi.iki.elide.nanohttpd.NanoHTTPD.Response;
-import fi.iki.elide.nanohttpd.NanoHTTPD.IHTTPSession;
-import fi.iki.elide.nanohttpd.NanoHTTPD.Response.Status;
+import fi.iki.elonen.NanoHTTPD;
+import fi.iki.elonen.NanoHTTPD.Response;
+import fi.iki.elonen.NanoHTTPD.IHTTPSession;
+import fi.iki.elonen.NanoHTTPD.Response.Status;
 
 import java.io.InputStream;
 
