@@ -5,16 +5,16 @@ Vibe is a small static listening room built with HTML, CSS, and JavaScript.
 It now includes:
 
 - A custom audio player instead of the browser default control bar
-- A real track queue powered by JavaScript data
+- A real track list powered by JavaScript data
 - Keyboard shortcuts for playback, seeking, and volume
 - Responsive styling that works better on mobile and desktop
-- An MP3-only library section for local files or direct MP3 URLs
+- An MP3-only player for local files or direct MP3 URLs
 - Media Session support for lock-screen and headset controls on supported browsers
 - A lightweight PWA shell for better installability and local caching
 
 ## Current setup
 
-The project currently ships with three local audio files in `assets/audio/`.
+The project currently ships with bundled local audio files in `assets/audio/`.
 
 The app reads its content from one array in `assets/js/app.js`:
 
@@ -76,6 +76,6 @@ browser is not foregrounded.
 - `assets/audio/`: bundled MP3 files
 - `assets/css/styles.css`: visual design and responsive layout
 - `assets/icons/icon.svg`: app icon used by the page, manifest, and media session
-- `assets/js/app.js`: player logic, queue rendering, and MP3 source cards
+- `assets/js/app.js`: player logic and track list rendering
 - `manifest.webmanifest`: installable app metadata
 - `sw.js`: local shell caching for the hosted app

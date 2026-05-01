@@ -283,10 +283,26 @@ body::before {
     font-size: 1rem;
 }
 
+.visual-counter {
+    margin: 10px 0 0;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.92rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
 .utility-row,
 .time-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.player-meta,
+.section-heading {
+    display: flex;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
 }
@@ -422,6 +438,20 @@ body::before {
     padding: 0;
     display: grid;
     gap: 12px;
+    max-height: min(70vh, 720px);
+    overflow: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 209, 102, 0.34) transparent;
+}
+
+.track-list::-webkit-scrollbar {
+    width: 10px;
+}
+
+.track-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(255, 209, 102, 0.26);
 }
 
 .track-button {
@@ -446,17 +476,20 @@ body::before {
 
 .track-meta {
     min-width: 0;
+    display: grid;
+    gap: 4px;
 }
 
 .track-title {
     display: block;
     font-weight: 500;
+    overflow-wrap: anywhere;
 }
 
 .track-line {
     display: block;
-    margin-top: 4px;
     font-size: 0.92rem;
+    overflow-wrap: anywhere;
 }
 
 .track-state {
@@ -555,5 +588,11 @@ a:focus-visible {
     .track-button {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .track-list {
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
     }
 }

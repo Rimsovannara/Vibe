@@ -26,7 +26,7 @@
                 <p class="eyebrow">Vibe</p>
                 <h1>A better home for the tracks you keep coming back to.</h1>
                 <p class="hero-text">
-                    The page keeps only what matters: one strong player and one clear track list.
+                    Simple controls, one clean track list, and local MP3 playback that stays out of the way.
                 </p>
                 <div class="hero-actions">
                     <button class="button button-primary" type="button" data-action="toggle-play">
@@ -40,7 +40,7 @@
                 <p class="eyebrow">Current mood</p>
                 <p class="hero-panel-title" id="track-mood">Late-night replay energy.</p>
                 <p class="hero-panel-copy" id="track-note">
-                    One local MP3 is loaded now, with the rest of the collection kept in one clean track panel.
+                    Local MP3 playback stays focused here: one player up front and one clear list of tracks.
                 </p>
             </aside>
         </header>
@@ -52,13 +52,14 @@
                         <p class="visual-label">Now playing</p>
                         <h2 class="visual-title" id="track-title">No One Noticed</h2>
                         <p class="visual-subtitle" id="track-artist">The Marias</p>
+                        <p class="visual-counter" id="track-position">Track 1 of 1</p>
                     </div>
                 </div>
 
                 <div class="player-meta">
                     <div>
                         <p class="eyebrow">Player</p>
-                        <h2 id="now-playing-title">Personal queue</h2>
+                        <h2 id="now-playing-title">Now playing</h2>
                     </div>
                     <p class="status-pill" id="status-pill" aria-live="polite">Ready to play</p>
                 </div>
@@ -101,7 +102,7 @@
                 </div>
 
                 <p class="helper-text" id="helper-text" aria-live="polite">
-                    If autoplay is blocked, press play once and the rest of the session stays smooth.
+                    If autoplay is blocked, press play once and the queue will keep moving normally after that.
                 </p>
 
                 <audio id="audio" preload="auto" playsinline></audio>
@@ -114,7 +115,7 @@
                 <div class="section-heading">
                     <div>
                         <p class="eyebrow">Tracks</p>
-                        <h2 id="queue-title">Choose a track</h2>
+                        <h2 id="queue-title">Track list</h2>
                     </div>
                     <p class="section-count" id="track-count">1 track</p>
                 </div>
@@ -122,7 +123,7 @@
                 <ol class="track-list" id="track-list"></ol>
 
                 <p class="panel-note">
-                    Tap any track to load it. Add more MP3 tracks in <code>assets/js/app.js</code>.
+                    Tap any track to play it. Add more MP3 tracks in <code>assets/js/app.js</code>.
                 </p>
             </section>
         </main>

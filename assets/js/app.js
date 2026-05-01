@@ -4,7 +4,7 @@ const tracks = [
         artist: "The Marías",
         src: "./assets/audio/The Marías - No One Noticed.mp3",
         mood: "Late-night replay energy.",
-        note: "A softer opener for the queue while the broader library is still being built.",
+        note: "A softer opener for a local collection that now stays in one clean track list.",
         accent: "#ff8a5b"
     },
     {
@@ -96,10 +96,6 @@ function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
 }
 
-function getSourceLabel(src) {
-    return /^https?:\/\//i.test(src) ? "Remote MP3" : "Local MP3";
-}
-
 class VibePlayer {
     constructor(trackData) {
         this.tracks = trackData;
@@ -110,6 +106,7 @@ class VibePlayer {
         this.audio = document.getElementById("audio");
         this.trackTitle = document.getElementById("track-title");
         this.trackArtist = document.getElementById("track-artist");
+        this.trackPosition = document.getElementById("track-position");
         this.trackMood = document.getElementById("track-mood");
         this.trackNote = document.getElementById("track-note");
         this.trackList = document.getElementById("track-list");
@@ -161,10 +158,10 @@ class VibePlayer {
             return;
         }
 
-        this.audio.loop = true;
+        this.audio.loop = false;
         this.audio.volume = 0.88;
         this.bindEvents();
-        this.setLoopState(true);
+        this.setLoopState(false);
         this.setShuffleState(false);
         this.loadTrack(0);
         this.updateVolumeLabel();
@@ -265,7 +262,7 @@ class VibePlayer {
         const tagName = target && target.tagName ? target.tagName : "";
         const isFormField = ["INPUT", "TEXTAREA", "SELECT"].includes(tagName);
 
-        if (isFormField) {
+        if (isFormField || event.metaKey || event.ctrlKey || event.altKey) {
             return;
         }
 
@@ -312,6 +309,7 @@ class VibePlayer {
 
         this.trackTitle.textContent = track.title;
         this.trackArtist.textContent = track.artist;
+        this.trackPosition.textContent = `Track ${this.currentIndex + 1} of ${this.tracks.length}`;
         this.trackMood.textContent = track.mood || "Set the mood for this track.";
         this.trackNote.textContent = track.note || "Add a short note for this track in assets/js/app.js.";
         this.playerVisual.style.setProperty("--art-accent", track.accent || "#ff8a5b");
@@ -441,8 +439,9 @@ class VibePlayer {
             state.className = "track-state";
 
             title.textContent = track.title;
-            line.textContent = `${track.artist} · ${getSourceLabel(track.src)} · ${track.mood || "Mood line pending"}`;
+            line.textContent = `${track.artist} · ${track.mood || "Mood line pending"}`;
             state.textContent = "Ready";
+            button.setAttribute("aria-label", `Play ${track.title} by ${track.artist}`);
 
             meta.append(title, line);
             button.append(meta, state);
@@ -464,6 +463,7 @@ class VibePlayer {
             const state = button.querySelector(".track-state");
 
             button.classList.toggle("track-button-active", isActive);
+            button.setAttribute("aria-current", isActive ? "true" : "false");
 
             if (!state) {
                 return;
