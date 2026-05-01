@@ -242,6 +242,18 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private static void skipFully(InputStream in, long bytes) throws java.io.IOException {
+        long remaining = bytes;
+        while (remaining > 0) {
+            long skipped = in.skip(remaining);
+            if (skipped <= 0) {
+                if (in.read() == -1) break;
+                skipped = 1;
+            }
+            remaining -= skipped;
+        }
+    }
+
     private final class LocalContentWebViewClient extends WebViewClientCompat {
         private final WebViewAssetLoader assetLoader;
 
@@ -264,7 +276,12 @@ public final class MainActivity extends Activity {
                     
                     long totalSize = afd.getLength();
                     if (totalSize == android.content.res.AssetFileDescriptor.UNKNOWN_LENGTH) {
-                        return null;
+                        try (Cursor c = getContentResolver().query(contentUri, new String[]{MediaStore.Audio.Media.SIZE}, null, null, null)) {
+                            if (c != null && c.moveToFirst()) {
+                                totalSize = c.getLong(0);
+                            }
+                        }
+                        if (totalSize <= 0) return null;
                     }
 
                     java.io.FileInputStream fis = afd.createInputStream();
@@ -281,7 +298,7 @@ public final class MainActivity extends Activity {
                         
                         if (end > totalSize - 1) end = totalSize - 1;
                         long length = end - start + 1;
-                        fis.getChannel().position(start);
+                        skipFully(fis, start);
                         
                         java.util.Map<String, String> headers = new java.util.HashMap<>();
                         headers.put("Content-Range", "bytes " + start + "-" + end + "/" + totalSize);
