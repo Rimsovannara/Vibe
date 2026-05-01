@@ -14,11 +14,9 @@ It now includes:
 
 ## Current setup
 
-The project currently ships with one local audio file:
+The project currently ships with three local audio files in `assets/audio/`.
 
-- `The Marías - No One Noticed.mp3`
-
-The app reads its content from one array in `app.js`:
+The app reads its content from one array in `assets/js/app.js`:
 
 - `tracks` for MP3 files and direct MP3 URLs
 
@@ -29,14 +27,14 @@ For the best background playback behavior on Android, use the hosted HTTPS versi
 
 ## Add more tracks
 
-Edit the `tracks` array in `app.js`:
+Edit the `tracks` array in `assets/js/app.js`:
 
 ```js
 const tracks = [
   {
     title: "Song title",
     artist: "Artist name",
-    src: "./your-file.mp3",
+    src: "./assets/audio/your-file.mp3",
     mood: "Short mood line",
     note: "Optional supporting copy",
     accent: "#ff7b54"
@@ -75,7 +73,9 @@ browser is not foregrounded.
 ## Files
 
 - `index.html`: app structure
-- `styles.css`: visual design and responsive layout
-- `app.js`: player logic, queue rendering, and MP3 source cards
+- `assets/audio/`: bundled MP3 files
+- `assets/css/styles.css`: visual design and responsive layout
+- `assets/icons/icon.svg`: app icon used by the page, manifest, and media session
+- `assets/js/app.js`: player logic, queue rendering, and MP3 source cards
 - `manifest.webmanifest`: installable app metadata
 - `sw.js`: local shell caching for the hosted app

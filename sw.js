@@ -1,11 +1,11 @@
-const CACHE_NAME = "vibe-shell-v2";
+const CACHE_NAME = "vibe-shell-v3";
 const SHELL_ASSETS = [
     "./",
     "./index.html",
-    "./styles.css",
-    "./app.js",
+    "./assets/css/styles.css",
+    "./assets/js/app.js",
     "./manifest.webmanifest",
-    "./icon.svg"
+    "./assets/icons/icon.svg"
 ];
 
 self.addEventListener("install", (event) => {

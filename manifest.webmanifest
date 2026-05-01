@@ -9,7 +9,7 @@
     "description": "A personal MP3 listening room with queue playback and lock-screen controls.",
     "icons": [
         {
-            "src": "./icon.svg",
+            "src": "./assets/icons/icon.svg",
             "sizes": "any",
             "type": "image/svg+xml",
             "purpose": "any"

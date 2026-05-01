@@ -10,14 +10,14 @@
         name="description"
         content="Vibe is a polished late-night listening room with a custom audio player built for MP3 playback.">
     <title>Vibe | Personal Listening Room</title>
-    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
     <div class="page-shell">
@@ -123,7 +123,7 @@
                 <ol class="track-list" id="track-list"></ol>
 
                 <p class="panel-note">
-                    Add more MP3 tracks by editing the <code>tracks</code> array in <code>app.js</code>.
+                    Add more MP3 tracks by editing the <code>tracks</code> array in <code>assets/js/app.js</code>.
                 </p>
             </section>
 
@@ -137,8 +137,8 @@
                 </div>
 
                 <p class="panel-note">
-                    Use local files like <code>./song.mp3</code> or direct MP3 URLs in the
-                    <code>tracks</code> array. YouTube links are not used here.
+                    Use local files like <code>./assets/audio/song.mp3</code> or direct MP3 URLs in the
+                    <code>tracks</code> array in <code>assets/js/app.js</code>. YouTube links are not used here.
                 </p>
 
                 <div class="playlist-grid" id="source-grid"></div>
@@ -146,6 +146,6 @@
         </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="assets/js/app.js"></script>
 </body>
 </html>

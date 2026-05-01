@@ -2,7 +2,7 @@ const tracks = [
     {
         title: "No One Noticed",
         artist: "The Marías",
-        src: "./The Marías - No One Noticed.mp3",
+        src: "./assets/audio/The Marías - No One Noticed.mp3",
         mood: "Late-night replay energy.",
         note: "A softer opener for the queue while the broader library is still being built.",
         accent: "#ff8a5b"
@@ -10,7 +10,7 @@ const tracks = [
     {
         title: "Illusionary Daytime x 室内系 TrackMaker [Extended Edit Version]",
         artist: "Reis",
-        src: "./Illusionary Daytime x TrackMaker Extended Edit Version [8KI21GoNiuI].mp3",
+        src: "./assets/audio/Illusionary Daytime x TrackMaker Extended Edit Version [8KI21GoNiuI].mp3",
         mood: "Fast, bright instrumental energy.",
         note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
         accent: "#7ad7ff"
@@ -18,7 +18,7 @@ const tracks = [
     {
         title: "Me, Myself & I (Lyrics)",
         artist: "G-Eazy x Bebe Rexha",
-        src: "./Me Myself and I [qiqllkchWTI].mp3",
+        src: "./assets/audio/Me Myself and I [qiqllkchWTI].mp3",
         mood: "Hook-heavy late-night rap pop.",
         note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
         accent: "#ffd166"
@@ -104,7 +104,7 @@ class VibePlayer {
         this.setupMediaSessionHandlers();
 
         if (!this.tracks.length) {
-            this.helperText.textContent = "Add at least one MP3 track in app.js to start playback.";
+            this.helperText.textContent = "Add at least one MP3 track in assets/js/app.js to start playback.";
             return;
         }
 
@@ -188,7 +188,7 @@ class VibePlayer {
 
         this.audio.addEventListener("error", () => {
             this.setStatus("Audio file could not be loaded");
-            this.helperText.textContent = "Check the track path in app.js if a song does not play.";
+            this.helperText.textContent = "Check the track path in assets/js/app.js if a song does not play.";
         });
 
         this.shuffleButton.addEventListener("click", () => {
@@ -260,7 +260,7 @@ class VibePlayer {
         this.trackTitle.textContent = track.title;
         this.trackArtist.textContent = track.artist;
         this.trackMood.textContent = track.mood || "Set the mood for this track.";
-        this.trackNote.textContent = track.note || "Add a short note for this track in app.js.";
+        this.trackNote.textContent = track.note || "Add a short note for this track in assets/js/app.js.";
         this.playerVisual.style.setProperty("--art-accent", track.accent || "#ff8a5b");
 
         this.currentTime.textContent = "0:00";
@@ -442,7 +442,7 @@ class VibePlayer {
                 <article class="playlist-empty">
                     <h3>MP3 library is ready</h3>
                     <p>
-                        Add direct MP3 files to the <code>tracks</code> array in <code>app.js</code> and they
+                        Add direct MP3 files to the <code>tracks</code> array in <code>assets/js/app.js</code> and they
                         will appear here automatically.
                     </p>
                 </article>
@@ -487,7 +487,7 @@ class VibePlayer {
             album: "Vibe",
             artwork: [
                 {
-                    src: new URL("./icon.svg", window.location.href).href,
+                    src: new URL("./assets/icons/icon.svg", window.location.href).href,
                     sizes: "any",
                     type: "image/svg+xml"
                 }
