@@ -232,7 +232,7 @@ public final class MainActivity extends Activity {
         private final android.content.ContentResolver resolver;
 
         public AudioServer(int port, android.content.ContentResolver resolver) {
-            super(port);
+            super("127.0.0.1", port);
             this.resolver = resolver;
         }
 
