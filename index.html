@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#09131f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta
         name="description"
-        content="Vibe is a polished late-night listening room with a custom audio player and space for YouTube video and playlist embeds.">
+        content="Vibe is a polished late-night listening room with a custom audio player built for MP3 playback.">
     <title>Vibe | Personal Listening Room</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -22,14 +26,14 @@
                 <p class="eyebrow">Vibe</p>
                 <h1>A better home for the tracks you keep coming back to.</h1>
                 <p class="hero-text">
-                    The player now has a proper interface, a real queue, and a ready-made section for
-                    YouTube links you want to add next.
+                    The player now has a proper interface, a real queue, and an MP3-only setup for local
+                    files or direct audio links.
                 </p>
                 <div class="hero-actions">
                     <button class="button button-primary" type="button" data-action="toggle-play">
                         Play current track
                     </button>
-                    <a class="button button-secondary" href="#playlists">Jump to playlists</a>
+                    <a class="button button-secondary" href="#library">Jump to library</a>
                 </div>
             </div>
 
@@ -37,7 +41,7 @@
                 <p class="eyebrow">Current mood</p>
                 <p class="hero-panel-title" id="track-mood">Late-night replay energy.</p>
                 <p class="hero-panel-copy" id="track-note">
-                    One local track is loaded now, and the YouTube area now supports both direct video links and playlists.
+                    One local MP3 is loaded now, and the library section is set up for more MP3 files next.
                 </p>
             </aside>
         </header>
@@ -96,9 +100,9 @@
                     If autoplay is blocked, press play once and the rest of the session stays smooth.
                 </p>
 
-                <audio id="audio" preload="metadata"></audio>
+                <audio id="audio" preload="auto" playsinline></audio>
                 <noscript>
-                    <p class="helper-text">JavaScript is required for the custom player and YouTube embeds.</p>
+                    <p class="helper-text">JavaScript is required for the custom player and MP3 library panel.</p>
                 </noscript>
             </section>
 
@@ -114,25 +118,25 @@
                 <ol class="track-list" id="track-list"></ol>
 
                 <p class="panel-note">
-                    Add more local songs by editing the <code>tracks</code> array in <code>app.js</code>.
+                    Add more MP3 tracks by editing the <code>tracks</code> array in <code>app.js</code>.
                 </p>
             </section>
 
-            <section class="playlist-card" id="playlists" aria-labelledby="playlist-title">
+            <section class="playlist-card" id="library" aria-labelledby="library-title">
                 <div class="section-heading">
                     <div>
-                        <p class="eyebrow">YouTube</p>
-                        <h2 id="playlist-title">Video and playlist embeds</h2>
+                        <p class="eyebrow">Library</p>
+                        <h2 id="library-title">MP3 sources</h2>
                     </div>
-                    <p class="section-count" id="youtube-count">Ready for links</p>
+                    <p class="section-count" id="source-count">Ready for files</p>
                 </div>
 
                 <p class="panel-note">
-                    Send more YouTube video or playlist URLs and I can drop them into the <code>youtubeEmbeds</code>
-                    array without another layout rewrite.
+                    Use local files like <code>./song.mp3</code> or direct MP3 URLs in the
+                    <code>tracks</code> array. YouTube links are not used here.
                 </p>
 
-                <div class="playlist-grid" id="playlist-grid"></div>
+                <div class="playlist-grid" id="source-grid"></div>
             </section>
         </main>
     </div>

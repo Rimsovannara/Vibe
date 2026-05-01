@@ -9,19 +9,6 @@ const tracks = [
     }
 ];
 
-const youtubeEmbeds = [
-    {
-        title: "YouTube pick 1",
-        url: "https://youtu.be/f3DoKx_R1_s",
-        description: "First saved YouTube link from the current queue update."
-    },
-    {
-        title: "YouTube pick 2",
-        url: "https://youtu.be/h2GQVlMkFiE",
-        description: "Second saved YouTube link from the current queue update."
-    }
-];
-
 function formatTime(seconds) {
     if (!Number.isFinite(seconds) || seconds < 0) {
         return "0:00";
@@ -37,124 +24,13 @@ function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
 }
 
-function normalizeYouTubeItem(entry, index) {
-    if (typeof entry === "string") {
-        return {
-            title: `YouTube item ${index + 1}`,
-            url: entry,
-            description: "Added from a YouTube link."
-        };
-    }
-
-    return {
-        title: entry.title || `YouTube item ${index + 1}`,
-        url: entry.url || entry.id || "",
-        description: entry.description || "Embedded from a YouTube link.",
-        kind: entry.kind || ""
-    };
-}
-
-function parseYouTubeResource(value, preferredKind = "") {
-    if (!value) {
-        return null;
-    }
-
-    const trimmed = value.trim();
-
-    if (!trimmed) {
-        return null;
-    }
-
-    if (!trimmed.includes("://")) {
-        const type = preferredKind || (/^(PL|UU|FL|OLAK5uy_)/.test(trimmed) ? "playlist" : "video");
-        return {
-            type,
-            id: trimmed
-        };
-    }
-
-    try {
-        const url = new URL(trimmed);
-        const hostname = url.hostname.replace(/^www\./, "");
-        const pathSegments = url.pathname.split("/").filter(Boolean);
-        const listId = url.searchParams.get("list");
-        const videoId = url.searchParams.get("v");
-
-        if (listId && preferredKind !== "video") {
-            return {
-                type: "playlist",
-                id: listId
-            };
-        }
-
-        if (hostname === "youtu.be" && pathSegments[0]) {
-            return {
-                type: "video",
-                id: pathSegments[0]
-            };
-        }
-
-        if ((hostname === "youtube.com" || hostname.endsWith(".youtube.com")) && videoId) {
-            return {
-                type: "video",
-                id: videoId
-            };
-        }
-
-        if ((hostname === "youtube.com" || hostname.endsWith(".youtube.com")) && pathSegments[0] === "embed" && pathSegments[1]) {
-            return {
-                type: preferredKind || "video",
-                id: pathSegments[1]
-            };
-        }
-
-        if ((hostname === "youtube.com" || hostname.endsWith(".youtube.com")) && pathSegments[0] === "shorts" && pathSegments[1]) {
-            return {
-                type: "video",
-                id: pathSegments[1]
-            };
-        }
-    } catch (error) {
-        const type = preferredKind || (/^(PL|UU|FL|OLAK5uy_)/.test(trimmed) ? "playlist" : "video");
-        return {
-            type,
-            id: trimmed
-        };
-    }
-
-    return null;
-}
-
-function buildYouTubeEmbed(value, preferredKind = "") {
-    const resource = parseYouTubeResource(value, preferredKind);
-
-    if (!resource || !resource.id) {
-        return null;
-    }
-
-    const params = new URLSearchParams({
-        playsinline: "1",
-        rel: "0",
-        iv_load_policy: "3"
-    });
-
-    if (resource.type === "playlist") {
-        return {
-            type: "playlist",
-            src: `https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(resource.id)}&${params.toString()}`
-        };
-    }
-
-    return {
-        type: "video",
-        src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(resource.id)}?${params.toString()}`
-    };
+function getSourceLabel(src) {
+    return /^https?:\/\//i.test(src) ? "Remote MP3" : "Local MP3";
 }
 
 class VibePlayer {
-    constructor(trackData, youtubeData) {
+    constructor(trackData) {
         this.tracks = trackData;
-        this.youtubeItems = youtubeData;
         this.currentIndex = 0;
         this.statusTimeout = null;
 
@@ -176,8 +52,8 @@ class VibePlayer {
         this.statusPill = document.getElementById("status-pill");
         this.helperText = document.getElementById("helper-text");
         this.playerVisual = document.getElementById("player-visual");
-        this.playlistGrid = document.getElementById("playlist-grid");
-        this.youtubeCount = document.getElementById("youtube-count");
+        this.sourceGrid = document.getElementById("source-grid");
+        this.sourceCount = document.getElementById("source-count");
         this.heroPlayButton = document.querySelector('[data-action="toggle-play"]');
 
         this.handleFirstInteraction = () => {
@@ -190,15 +66,25 @@ class VibePlayer {
     }
 
     init() {
-        if (!this.audio || !this.tracks.length) {
+        if (!this.audio) {
+            return;
+        }
+
+        this.audio.preload = "auto";
+        this.audio.playsInline = true;
+
+        this.renderTrackList();
+        this.renderSourceCards();
+        this.registerServiceWorker();
+        this.setupMediaSessionHandlers();
+
+        if (!this.tracks.length) {
+            this.helperText.textContent = "Add at least one MP3 track in app.js to start playback.";
             return;
         }
 
         this.audio.loop = true;
         this.audio.volume = 0.88;
-
-        this.renderTrackList();
-        this.renderYouTubeEmbeds();
         this.bindEvents();
         this.loadTrack(0);
         this.updateVolumeLabel();
@@ -246,6 +132,7 @@ class VibePlayer {
             this.heroPlayButton.textContent = "Pause current track";
             this.setStatus("Playing now");
             this.updateTrackButtons();
+            this.updateMediaSessionState();
         });
 
         this.audio.addEventListener("pause", () => {
@@ -253,9 +140,12 @@ class VibePlayer {
             this.heroPlayButton.textContent = "Play current track";
             this.setStatus("Paused");
             this.updateTrackButtons();
+            this.updateMediaSessionState();
         });
 
         this.audio.addEventListener("waiting", () => this.setStatus("Buffering..."));
+        this.audio.addEventListener("ratechange", () => this.updatePositionState());
+        this.audio.addEventListener("durationchange", () => this.updatePositionState());
         this.audio.addEventListener("ended", () => {
             if (!this.audio.loop && this.tracks.length > 1) {
                 this.changeTrack(1);
@@ -334,6 +224,8 @@ class VibePlayer {
 
         this.updateTrackButtons();
         this.syncMediaSession(track);
+        this.updateMediaSessionState();
+        this.updatePositionState();
 
         if (autoplay) {
             this.playCurrentTrack();
@@ -375,6 +267,7 @@ class VibePlayer {
         this.progress.value = String(ratio);
         this.currentTime.textContent = formatTime(this.audio.currentTime);
         this.duration.textContent = formatTime(this.audio.duration);
+        this.updatePositionState();
     }
 
     updateVolumeLabel() {
@@ -460,63 +353,53 @@ class VibePlayer {
         });
     }
 
-    renderYouTubeEmbeds() {
-        const normalized = this.youtubeItems
-            .map((entry, index) => normalizeYouTubeItem(entry, index))
-            .map((entry) => ({
-                ...entry,
-                embed: buildYouTubeEmbed(entry.url, entry.kind)
-            }))
-            .filter((entry) => entry.embed);
-
-        if (this.youtubeCount) {
-            this.youtubeCount.textContent = normalized.length
-                ? `${normalized.length} ${normalized.length === 1 ? "link" : "links"} added`
-                : "Ready for links";
+    renderSourceCards() {
+        if (!this.sourceGrid) {
+            return;
         }
 
-        if (!normalized.length) {
-            this.playlistGrid.innerHTML = `
+        if (this.sourceCount) {
+            this.sourceCount.textContent = this.tracks.length
+                ? `${this.tracks.length} ${this.tracks.length === 1 ? "source" : "sources"}`
+                : "Ready for files";
+        }
+
+        if (!this.tracks.length) {
+            this.sourceGrid.innerHTML = `
                 <article class="playlist-empty">
-                    <h3>YouTube space is ready</h3>
+                    <h3>MP3 library is ready</h3>
                     <p>
-                        Drop YouTube video or playlist links into <code>youtubeEmbeds</code> in <code>app.js</code>
-                        and this section will render them as embeds automatically.
+                        Add direct MP3 files to the <code>tracks</code> array in <code>app.js</code> and they
+                        will appear here automatically.
                     </p>
                 </article>
             `;
             return;
         }
 
-        this.playlistGrid.innerHTML = "";
+        this.sourceGrid.innerHTML = "";
 
-        normalized.forEach((playlist) => {
+        this.tracks.forEach((track, index) => {
             const card = document.createElement("article");
             card.className = "playlist-item";
 
             const title = document.createElement("h3");
-            title.textContent = playlist.title;
+            title.textContent = track.title;
 
             const description = document.createElement("p");
-            description.textContent = playlist.description;
+            description.textContent = `${track.artist} · ${getSourceLabel(track.src)}`;
 
-            const link = document.createElement("a");
-            link.className = "playlist-link";
-            link.href = playlist.url;
-            link.target = "_blank";
-            link.rel = "noreferrer";
-            link.textContent = "Open on YouTube";
+            const source = document.createElement("p");
+            source.textContent = track.src;
 
-            const frame = document.createElement("iframe");
-            frame.loading = "lazy";
-            frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-            frame.referrerPolicy = "strict-origin-when-cross-origin";
-            frame.allowFullscreen = true;
-            frame.src = playlist.embed.src;
-            frame.title = `${playlist.title} ${playlist.embed.type}`;
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "button button-secondary";
+            button.textContent = "Load track";
+            button.addEventListener("click", () => this.loadTrack(index, true));
 
-            card.append(title, description, link, frame);
-            this.playlistGrid.appendChild(card);
+            card.append(title, description, source, button);
+            this.sourceGrid.appendChild(card);
         });
     }
 
@@ -528,9 +411,96 @@ class VibePlayer {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: track.title,
             artist: track.artist,
-            album: "Vibe"
+            album: "Vibe",
+            artwork: [
+                {
+                    src: new URL("./icon.svg", window.location.href).href,
+                    sizes: "any",
+                    type: "image/svg+xml"
+                }
+            ]
+        });
+    }
+
+    setupMediaSessionHandlers() {
+        if (!("mediaSession" in navigator) || typeof navigator.mediaSession.setActionHandler !== "function") {
+            return;
+        }
+
+        const handlers = {
+            play: () => this.playCurrentTrack(),
+            pause: () => this.audio.pause(),
+            previoustrack: () => this.changeTrack(-1),
+            nexttrack: () => this.changeTrack(1),
+            seekbackward: (details) => {
+                const offset = details && typeof details.seekOffset === "number" ? details.seekOffset : 10;
+                this.audio.currentTime = clamp(this.audio.currentTime - offset, 0, this.audio.duration || 0);
+                this.updateProgress();
+            },
+            seekforward: (details) => {
+                const offset = details && typeof details.seekOffset === "number" ? details.seekOffset : 10;
+                this.audio.currentTime = clamp(this.audio.currentTime + offset, 0, this.audio.duration || 0);
+                this.updateProgress();
+            },
+            seekto: (details) => {
+                if (!details || typeof details.seekTime !== "number") {
+                    return;
+                }
+
+                this.audio.currentTime = clamp(details.seekTime, 0, this.audio.duration || 0);
+                this.updateProgress();
+            }
+        };
+
+        Object.entries(handlers).forEach(([action, handler]) => {
+            try {
+                navigator.mediaSession.setActionHandler(action, handler);
+            } catch (error) {
+                return;
+            }
+        });
+    }
+
+    updateMediaSessionState() {
+        if (!("mediaSession" in navigator)) {
+            return;
+        }
+
+        navigator.mediaSession.playbackState = this.audio.paused ? "paused" : "playing";
+    }
+
+    updatePositionState() {
+        if (
+            !("mediaSession" in navigator) ||
+            typeof navigator.mediaSession.setPositionState !== "function" ||
+            !Number.isFinite(this.audio.duration) ||
+            this.audio.duration <= 0
+        ) {
+            return;
+        }
+
+        try {
+            navigator.mediaSession.setPositionState({
+                duration: this.audio.duration,
+                playbackRate: this.audio.playbackRate || 1,
+                position: clamp(this.audio.currentTime, 0, this.audio.duration)
+            });
+        } catch (error) {
+            return;
+        }
+    }
+
+    registerServiceWorker() {
+        if (!("serviceWorker" in navigator) || !window.isSecureContext) {
+            return;
+        }
+
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("./sw.js").catch(() => {
+                return;
+            });
         });
     }
 }
 
-new VibePlayer(tracks, youtubeEmbeds);
+new VibePlayer(tracks);

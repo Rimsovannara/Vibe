@@ -8,8 +8,9 @@ It now includes:
 - A real track queue powered by JavaScript data
 - Keyboard shortcuts for playback, seeking, and volume
 - Responsive styling that works better on mobile and desktop
-- A dedicated section for embedding YouTube videos and playlists
-- Privacy-enhanced YouTube embeds via `youtube-nocookie.com`
+- An MP3-only library section for local files or direct MP3 URLs
+- Media Session support for lock-screen and headset controls on supported browsers
+- A lightweight PWA shell for better installability and local caching
 
 ## Current setup
 
@@ -17,14 +18,14 @@ The project currently ships with one local audio file:
 
 - `The Marías - No One Noticed.mp3`
 
-The app reads its content from two arrays in `app.js`:
+The app reads its content from one array in `app.js`:
 
-- `tracks` for local audio files
-- `youtubeEmbeds` for YouTube video links, playlist links, or raw IDs
+- `tracks` for MP3 files and direct MP3 URLs
 
 ## Run locally
 
 Because this is a static project, you can open `index.html` directly or serve the folder with any simple static server.
+For the best background playback behavior on Android, use the hosted HTTPS version or another secure origin so the service worker and installable app shell can load.
 
 ## Add more tracks
 
@@ -39,40 +40,29 @@ const tracks = [
     mood: "Short mood line",
     note: "Optional supporting copy",
     accent: "#ff7b54"
-  }
-];
-```
-
-## Add YouTube links
-
-Edit the `youtubeEmbeds` array in `app.js` and add either direct YouTube URLs or objects:
-
-```js
-const youtubeEmbeds = [
-  "https://youtu.be/YOUR_VIDEO_ID",
-  "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID",
-  {
-    title: "Night drive",
-    url: "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID",
-    description: "Optional short description",
-    kind: "playlist"
   },
   {
-    title: "One-off video",
-    url: "https://www.youtube.com/watch?v=YOUR_VIDEO_ID",
-    description: "Optional short description",
-    kind: "video"
+    title: "Hosted track",
+    artist: "Artist name",
+    src: "https://example.com/audio/your-file.mp3",
+    mood: "Direct MP3 URL",
+    note: "This also works if the URL points straight to an MP3 file.",
+    accent: "#5bc0eb"
   }
 ];
 ```
 
-The app converts those into embedded video or playlist cards automatically.
+Only direct MP3 sources work here. A YouTube page URL is not an MP3 file, so it will not play in the
+audio element unless you replace it with a real `.mp3` file path or direct `.mp3` URL.
 
-## Privacy note
+## Background playback
 
-The YouTube embeds use `youtube-nocookie.com`, which is YouTube's privacy-enhanced embed mode.
-That reduces personalization, but it does not give the site its own ad blocker and it cannot force
-YouTube to never show ads or account prompts.
+Vibe now exposes Media Session metadata and action handlers so supported browsers can show play, pause,
+seek, and track controls from notifications, headsets, and some lock screens.
+
+This improves screen-off and background playback, but a web app still cannot keep playing after a device
+is fully powered down. The realistic target here is background playback while the screen is locked or the
+browser is not foregrounded.
 
 ## Keyboard shortcuts
 
@@ -86,4 +76,6 @@ YouTube to never show ads or account prompts.
 
 - `index.html`: app structure
 - `styles.css`: visual design and responsive layout
-- `app.js`: player logic, queue rendering, and YouTube embeds
+- `app.js`: player logic, queue rendering, and MP3 source cards
+- `manifest.webmanifest`: installable app metadata
+- `sw.js`: local shell caching for the hosted app
