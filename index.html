@@ -3,191 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Listen to 'The Marías - No One Noticed' with our beautiful audio player">
-    <title>SOVANNARA | Thanks AI</title>
-    
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TRX98DPF0N"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-TRX98DPF0N');
-    </script>
-    
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            overflow: hidden; /* Prevent scrolling */
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-        }
-
-        .player-container {
-            background: #111;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
-            max-width: 350px;
-            width: 100%;
-            text-align: center;
-        }
-
-        audio {
-            width: 100%;
-            outline: none;
-            filter: invert(1) hue-rotate(180deg);
-            border-radius: 6px;
-        }
-    </style>
+    <meta name="theme-color" content="#09131f">
+    <meta
+        name="description"
+        content="Vibe is a polished late-night listening room with a custom audio player and space for YouTube video and playlist embeds.">
+    <title>Vibe | Personal Listening Room</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="player-container" role="main" aria-label="Audio Player">
-        <audio 
-            controls 
-            preload="metadata" 
-            autoplay 
-            loop
-            aria-label="Audio player for No One Noticed by The Marías"
-            title="No One Noticed - The Marías">
-            <source src="The Marías - No One Noticed.mp3" type="audio/mpeg">
-            Your browser does not support the audio element.
-        </audio>
+    <div class="page-shell">
+        <header class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Vibe</p>
+                <h1>A better home for the tracks you keep coming back to.</h1>
+                <p class="hero-text">
+                    The player now has a proper interface, a real queue, and a ready-made section for
+                    YouTube links you want to add next.
+                </p>
+                <div class="hero-actions">
+                    <button class="button button-primary" type="button" data-action="toggle-play">
+                        Play current track
+                    </button>
+                    <a class="button button-secondary" href="#playlists">Jump to playlists</a>
+                </div>
+            </div>
+
+            <aside class="hero-panel" aria-label="Listening summary">
+                <p class="eyebrow">Current mood</p>
+                <p class="hero-panel-title" id="track-mood">Late-night replay energy.</p>
+                <p class="hero-panel-copy" id="track-note">
+                    One local track is loaded now, and the YouTube area now supports both direct video links and playlists.
+                </p>
+            </aside>
+        </header>
+
+        <main class="layout">
+            <section class="player-card" aria-labelledby="now-playing-title">
+                <div class="player-visual" id="player-visual">
+                    <div class="visual-copy">
+                        <p class="visual-label">Now playing</p>
+                        <h2 class="visual-title" id="track-title">No One Noticed</h2>
+                        <p class="visual-subtitle" id="track-artist">The Marias</p>
+                    </div>
+                </div>
+
+                <div class="player-meta">
+                    <div>
+                        <p class="eyebrow">Player</p>
+                        <h2 id="now-playing-title">Personal queue</h2>
+                    </div>
+                    <p class="status-pill" id="status-pill" aria-live="polite">Ready to play</p>
+                </div>
+
+                <div class="progress-block">
+                    <label class="sr-only" for="progress">Track progress</label>
+                    <input id="progress" class="progress-input" type="range" min="0" max="100" value="0">
+                    <div class="time-row" aria-hidden="true">
+                        <span id="current-time">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                </div>
+
+                <div class="transport-row">
+                    <button class="control-button" id="prev-button" type="button" aria-label="Previous track">
+                        Prev
+                    </button>
+                    <button class="control-button control-button-primary" id="play-button" type="button"
+                        aria-label="Play or pause">
+                        Play
+                    </button>
+                    <button class="control-button" id="next-button" type="button" aria-label="Next track">
+                        Next
+                    </button>
+                </div>
+
+                <div class="utility-row">
+                    <button class="chip-button chip-button-active" id="loop-button" type="button" aria-pressed="true">
+                        Loop on
+                    </button>
+                    <label class="volume-control" for="volume">
+                        <span>Volume</span>
+                        <input id="volume" type="range" min="0" max="100" value="88">
+                    </label>
+                </div>
+
+                <p class="helper-text" id="helper-text" aria-live="polite">
+                    If autoplay is blocked, press play once and the rest of the session stays smooth.
+                </p>
+
+                <audio id="audio" preload="metadata"></audio>
+                <noscript>
+                    <p class="helper-text">JavaScript is required for the custom player and YouTube embeds.</p>
+                </noscript>
+            </section>
+
+            <section class="queue-card" aria-labelledby="queue-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Queue</p>
+                        <h2 id="queue-title">Track list</h2>
+                    </div>
+                    <p class="section-count" id="track-count">1 track</p>
+                </div>
+
+                <ol class="track-list" id="track-list"></ol>
+
+                <p class="panel-note">
+                    Add more local songs by editing the <code>tracks</code> array in <code>app.js</code>.
+                </p>
+            </section>
+
+            <section class="playlist-card" id="playlists" aria-labelledby="playlist-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">YouTube</p>
+                        <h2 id="playlist-title">Video and playlist embeds</h2>
+                    </div>
+                    <p class="section-count" id="youtube-count">Ready for links</p>
+                </div>
+
+                <p class="panel-note">
+                    Send more YouTube video or playlist URLs and I can drop them into the <code>youtubeEmbeds</code>
+                    array without another layout rewrite.
+                </p>
+
+                <div class="playlist-grid" id="playlist-grid"></div>
+            </section>
+        </main>
     </div>
 
-    <!-- Enhanced JavaScript with better functionality -->
-    <script>
-        // Enhanced audio player functionality
-        class AudioPlayer {
-            constructor() {
-                this.audio = document.querySelector('audio');
-                this.playerContainer = document.querySelector('.player-container');
-                this.init();
-            }
-
-            init() {
-                if (this.audio) {
-                    this.setupEventListeners();
-                    this.handleAutoplay();
-                }
-            }
-
-            setupEventListeners() {
-                // Audio event listeners
-                this.audio.addEventListener('play', () => {
-                    this.trackEvent('audio_play');
-                });
-
-                this.audio.addEventListener('pause', () => {
-                    this.trackEvent('audio_pause');
-                });
-
-                this.audio.addEventListener('ended', () => {
-                    this.trackEvent('audio_loop');
-                    console.log('Song ended, looping...');
-                });
-
-                // User interaction listeners
-                document.addEventListener('click', () => {
-                    if (this.audio && this.audio.paused) {
-                        this.startPlaying();
-                    }
-                }, { once: true });
-
-                // Keyboard navigation
-                document.addEventListener('keydown', (e) => {
-                    if (e.code === 'Space') {
-                        e.preventDefault();
-                        this.togglePlayPause();
-                    }
-                });
-            }
-
-            startPlaying() {
-                if (this.audio) {
-                    this.audio.play().catch((error) => {
-                        console.log('Autoplay prevented:', error);
-                        this.showClickMessage();
-                    });
-                }
-            }
-
-            togglePlayPause() {
-                if (this.audio) {
-                    if (this.audio.paused) {
-                        this.audio.play();
-                    } else {
-                        this.audio.pause();
-                    }
-                }
-            }
-
-            showClickMessage() {
-                const existingMessage = this.playerContainer.querySelector('.click-message');
-                if (!existingMessage) {
-                    const clickMessage = document.createElement('div');
-                    clickMessage.innerHTML = '<p style="color: #888; margin-top: 10px; font-size: 14px;">Click anywhere to start playing</p>';
-                    clickMessage.className = 'click-message';
-                    this.playerContainer.appendChild(clickMessage);
-                    
-                    this.playerContainer.addEventListener('click', () => {
-                        this.audio.play();
-                        clickMessage.remove();
-                    }, { once: true });
-                }
-            }
-
-            handleAutoplay() {
-                window.addEventListener('load', () => {
-                    this.startPlaying();
-                });
-            }
-
-            trackEvent(eventName, additionalData = {}) {
-                if (typeof gtag !== 'undefined') {
-                    const defaultData = {
-                        event_category: 'audio',
-                        event_label: 'The Marías - No One Noticed'
-                    };
-                    gtag('event', eventName, { ...defaultData, ...additionalData });
-                }
-            }
-        }
-
-        // Performance tracking
-        window.addEventListener('load', function() {
-            const loadTime = performance.now();
-            console.log('Page loaded in:', loadTime.toFixed(2), 'ms');
-            
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'timing_complete', {
-                    name: 'load',
-                    value: Math.round(loadTime)
-                });
-            }
-        });
-
-        // Page visibility tracking
-        document.addEventListener('visibilitychange', function() {
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'visibility_change', {
-                    event_category: 'engagement',
-                    event_label: document.hidden ? 'hidden' : 'visible'
-                });
-            }
-        });
-
-        // Initialize the audio player
-        const player = new AudioPlayer();
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>

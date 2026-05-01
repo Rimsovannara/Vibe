@@ -1,50 +1,89 @@
-# 🎵 Vibe‑3 Audio Player
+# Vibe
 
-A beautiful, modern, web‑based audio player built with **HTML5**, **CSS3**, and **JavaScript** — designed for high‑quality playback, smooth animations, and intuitive interactions.
+Vibe is a small static listening room built with HTML, CSS, and JavaScript.
 
-👉 **Live Demo:** https://rimsovannara.github.io/Vibe/
+It now includes:
 
----
+- A custom audio player instead of the browser default control bar
+- A real track queue powered by JavaScript data
+- Keyboard shortcuts for playback, seeking, and volume
+- Responsive styling that works better on mobile and desktop
+- A dedicated section for embedding YouTube videos and playlists
+- Privacy-enhanced YouTube embeds via `youtube-nocookie.com`
 
-## ✨ Features
+## Current setup
 
-- 🎧 **High‑Quality Audio Playback** — Built on the HTML5 `<audio>` element with MP3 support  
-- 🎨 **Beautiful UI** — Modern glassmorphism design with animated gradients  
-- 📱 **Responsive Design** — Works seamlessly on phones, tablets, and desktops  
-- ♿ **Accessibility‑Friendly** — ARIA labels, keyboard navigation, screen reader support  
-- 🔄 **Auto‑Loop** — Continuous playback  
-- ⌨️ **Keyboard Controls** — Spacebar to play/pause  
-- 🎭 **Visual Feedback** — Play/pause animations, loading indicators, hover effects  
-- 🚀 **Performance Optimized** — Fast loading with analytics tracking  
-- 📊 **Analytics Integration** — Google Analytics for user behavior (optional)
+The project currently ships with one local audio file:
 
----
+- `The Marías - No One Noticed.mp3`
 
-## 🎵 Current Track
+The app reads its content from two arrays in `app.js`:
 
-**"No One Noticed"** by **The Marías**
+- `tracks` for local audio files
+- `youtubeEmbeds` for YouTube video links, playlist links, or raw IDs
 
-*(Replace this with your own audio if you like!)*
+## Run locally
 
----
+Because this is a static project, you can open `index.html` directly or serve the folder with any simple static server.
 
-## 🛠️ Technologies Used
+## Add more tracks
 
-- **HTML5** — Semantic markup  
-- **CSS3** —  
-  - Grid & Flexbox layout  
-  - Animations & transitions  
-  - Glassmorphism & gradients  
-  - Media queries for responsiveness  
-- **JavaScript (ES6+)** — Class‑based logic, event handling  
-- **Google Analytics** — Optional tracking & performance insights  
+Edit the `tracks` array in `app.js`:
 
----
+```js
+const tracks = [
+  {
+    title: "Song title",
+    artist: "Artist name",
+    src: "./your-file.mp3",
+    mood: "Short mood line",
+    note: "Optional supporting copy",
+    accent: "#ff7b54"
+  }
+];
+```
 
-## 🚀 Getting Started
+## Add YouTube links
 
-### 📥 Clone the Project
+Edit the `youtubeEmbeds` array in `app.js` and add either direct YouTube URLs or objects:
 
-```bash
-git clone https://github.com/rimsovannara/Vibe.git
-cd Vibe
+```js
+const youtubeEmbeds = [
+  "https://youtu.be/YOUR_VIDEO_ID",
+  "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID",
+  {
+    title: "Night drive",
+    url: "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID",
+    description: "Optional short description",
+    kind: "playlist"
+  },
+  {
+    title: "One-off video",
+    url: "https://www.youtube.com/watch?v=YOUR_VIDEO_ID",
+    description: "Optional short description",
+    kind: "video"
+  }
+];
+```
+
+The app converts those into embedded video or playlist cards automatically.
+
+## Privacy note
+
+The YouTube embeds use `youtube-nocookie.com`, which is YouTube's privacy-enhanced embed mode.
+That reduces personalization, but it does not give the site its own ad blocker and it cannot force
+YouTube to never show ads or account prompts.
+
+## Keyboard shortcuts
+
+- `Space`: play or pause
+- `Left Arrow`: rewind 5 seconds
+- `Right Arrow`: skip forward 5 seconds
+- `Up Arrow`: raise volume
+- `Down Arrow`: lower volume
+
+## Files
+
+- `index.html`: app structure
+- `styles.css`: visual design and responsive layout
+- `app.js`: player logic, queue rendering, and YouTube embeds
