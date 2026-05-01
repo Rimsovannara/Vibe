@@ -155,6 +155,28 @@ class VibePlayer {
         this.registerServiceWorker();
         this.setupMediaSessionHandlers();
 
+        if (window.VibeApp) {
+            const androidActions = document.getElementById("android-actions");
+            const syncButton = document.getElementById("sync-android-button");
+            if (androidActions && syncButton) {
+                androidActions.style.display = "block";
+                syncButton.addEventListener("click", () => {
+                    window.VibeApp.requestDeviceAudio();
+                    this.setStatus("Requesting device audio...");
+                });
+            }
+            
+            window.onAndroidAudioSync = (syncedTracks) => {
+                if (syncedTracks && syncedTracks.length > 0) {
+                    this.tracks = [...this.tracks, ...syncedTracks];
+                    this.renderTrackList();
+                    this.setStatus(`Synced ${syncedTracks.length} device songs`);
+                } else {
+                    this.setStatus("No new songs found");
+                }
+            };
+        }
+
         if (!this.tracks.length) {
             this.helperText.textContent = "Add at least one MP3 track in assets/js/app.js to start playback.";
             return;

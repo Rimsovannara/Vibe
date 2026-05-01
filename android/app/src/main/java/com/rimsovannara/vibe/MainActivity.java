@@ -1,24 +1,37 @@
 package com.rimsovannara.vibe;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.ContentUris;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
-import com.rimsovannara.vibe.BuildConfig;
+import androidx.annotation.Nullable;
 import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewClientCompat;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.InputStream;
+
 public final class MainActivity extends Activity {
     private static final String HOME_URL = "https://appassets.androidplatform.net/assets/www/index.html";
+    private static final int PERMISSION_REQUEST_CODE = 100;
 
     private WebView webView;
     private WebViewAssetLoader assetLoader;
@@ -79,6 +92,7 @@ public final class MainActivity extends Activity {
         assetLoader = new WebViewAssetLoader.Builder()
             .setDomain("appassets.androidplatform.net")
             .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+            .addPathHandler("/device_audio/", new DeviceAudioPathHandler())
             .build();
 
         WebSettings settings = view.getSettings();
@@ -103,8 +117,116 @@ public final class MainActivity extends Activity {
             WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
         }
 
+        view.addJavascriptInterface(new VibeAppInterface(), "VibeApp");
+
         view.setWebChromeClient(new WebChromeClient());
         view.setWebViewClient(new LocalContentWebViewClient(assetLoader));
+    }
+
+    private final class DeviceAudioPathHandler implements WebViewAssetLoader.PathHandler {
+        @Nullable
+        @Override
+        public WebResourceResponse handle(String path) {
+            try {
+                String idStr = path.replaceAll("[^0-9]", "");
+                if (idStr.isEmpty()) return null;
+                long id = Long.parseLong(idStr);
+                Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+                InputStream stream = getContentResolver().openInputStream(contentUri);
+                return new WebResourceResponse("audio/mpeg", null, stream);
+            } catch (Exception e) {
+                Log.e("VibeApp", "Failed to load audio: " + path, e);
+                return null;
+            }
+        }
+    }
+
+    private final class VibeAppInterface {
+        @JavascriptInterface
+        public void requestDeviceAudio() {
+            runOnUiThread(() -> {
+                String permission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
+                    Manifest.permission.READ_MEDIA_AUDIO : Manifest.permission.READ_EXTERNAL_STORAGE;
+                
+                if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
+                    syncAudio();
+                } else {
+                    requestPermissions(new String[]{permission}, PERMISSION_REQUEST_CODE);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                syncAudio();
+            } else {
+                Log.w("VibeApp", "Storage permission denied");
+            }
+        }
+    }
+
+    private void syncAudio() {
+        new Thread(() -> {
+            try {
+                JSONArray jsonTracks = new JSONArray();
+                String[] projection = new String[] {
+                    MediaStore.Audio.Media._ID,
+                    MediaStore.Audio.Media.TITLE,
+                    MediaStore.Audio.Media.ARTIST,
+                    MediaStore.Audio.Media.IS_MUSIC
+                };
+                
+                String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
+                try (Cursor cursor = getContentResolver().query(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        projection,
+                        selection,
+                        null,
+                        MediaStore.Audio.Media.TITLE + " ASC"
+                )) {
+                    if (cursor != null) {
+                        int idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID);
+                        int titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE);
+                        int artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST);
+                        
+                        while (cursor.moveToNext()) {
+                            long id = cursor.getLong(idCol);
+                            String title = cursor.getString(titleCol);
+                            String artist = cursor.getString(artistCol);
+                            if (artist == null || artist.equals("<unknown>")) artist = "Unknown Artist";
+                            
+                            JSONObject track = new JSONObject();
+                            track.put("title", title);
+                            track.put("artist", artist);
+                            track.put("src", "https://appassets.androidplatform.net/device_audio/" + id + ".mp3");
+                            track.put("mood", "From your device");
+                            track.put("note", "Synced automatically by the Vibe Android app.");
+                            track.put("accent", "#8a5bff");
+                            
+                            jsonTracks.put(track);
+                        }
+                    }
+                }
+                
+                String jsonString = jsonTracks.toString();
+                
+                final String jsCode = "if(window.onAndroidAudioSync) { " +
+                        "window.onAndroidAudioSync(" + jsonString + "); " +
+                        "}";
+                
+                runOnUiThread(() -> {
+                    if (webView != null) {
+                        webView.evaluateJavascript(jsCode, null);
+                    }
+                });
+            } catch (Exception e) {
+                Log.e("VibeApp", "Failed to sync audio", e);
+            }
+        }).start();
     }
 
     private static final class LocalContentWebViewClient extends WebViewClientCompat {
@@ -126,4 +248,3 @@ public final class MainActivity extends Activity {
         }
     }
 }
-
