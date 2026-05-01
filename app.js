@@ -46,12 +46,10 @@ function getSourceLabel(src) {
 
 class VibePlayer {
     constructor(trackData) {
-        this.baseTracks = trackData;
-        this.tracks = [...trackData];
+        this.tracks = trackData;
         this.currentIndex = 0;
         this.isShuffle = false;
         this.statusTimeout = null;
-        this.db = null;
 
         this.audio = document.getElementById("audio");
         this.trackTitle = document.getElementById("track-title");
@@ -75,8 +73,6 @@ class VibePlayer {
         this.playerVisual = document.getElementById("player-visual");
         this.sourceGrid = document.getElementById("source-grid");
         this.sourceCount = document.getElementById("source-count");
-        this.uploadButton = document.getElementById("upload-button");
-        this.fileInput = document.getElementById("file-input");
         this.heroPlayButton = document.querySelector('[data-action="toggle-play"]');
 
         this.handleFirstInteraction = () => {
@@ -94,7 +90,7 @@ class VibePlayer {
         window.removeEventListener("keydown", this.handleFirstInteraction);
     }
 
-    async init() {
+    init() {
         if (!this.audio) {
             return;
         }
@@ -102,62 +98,24 @@ class VibePlayer {
         this.audio.preload = "auto";
         this.audio.playsInline = true;
 
-        await this.initDB();
-        await this.loadLocalTracks();
-
         this.renderTrackList();
         this.renderSourceCards();
         this.registerServiceWorker();
         this.setupMediaSessionHandlers();
 
         if (!this.tracks.length) {
-            this.helperText.textContent = "Add at least one MP3 track to start playback.";
+            this.helperText.textContent = "Add at least one MP3 track in app.js to start playback.";
             return;
         }
 
         this.audio.loop = true;
         this.audio.volume = 0.88;
         this.bindEvents();
+        this.setLoopState(true);
+        this.setShuffleState(false);
         this.loadTrack(0);
         this.updateVolumeLabel();
         this.tryAutoplay();
-    }
-
-    initDB() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open("VibeDB", 1);
-            request.onerror = () => reject();
-            request.onsuccess = (e) => {
-                this.db = e.target.result;
-                resolve();
-            };
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains("tracks")) {
-                    db.createObjectStore("tracks", { keyPath: "id", autoIncrement: true });
-                }
-            };
-        });
-    }
-
-    async loadLocalTracks() {
-        if (!this.db) return;
-        return new Promise((resolve) => {
-            const transaction = this.db.transaction(["tracks"], "readonly");
-            const store = transaction.objectStore("tracks");
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                const localTracks = request.result.map(item => ({
-                    ...item,
-                    src: URL.createObjectURL(item.blob),
-                    isLocal: true
-                }));
-                this.tracks = [...this.baseTracks, ...localTracks];
-                resolve();
-            };
-            request.onerror = () => resolve();
-        });
     }
 
     bindEvents() {
@@ -182,11 +140,15 @@ class VibePlayer {
         });
 
         this.loopButton.addEventListener("click", () => {
-            this.audio.loop = !this.audio.loop;
-            this.loopButton.textContent = this.audio.loop ? "Loop on" : "Loop off";
-            this.loopButton.classList.toggle("chip-button-active", this.audio.loop);
-            this.loopButton.setAttribute("aria-pressed", String(this.audio.loop));
-            this.setStatus(this.audio.loop ? "Loop enabled" : "Loop disabled");
+            const nextLoopState = !this.audio.loop;
+            this.setLoopState(nextLoopState);
+
+            // Loop and shuffle compete for end-of-track behavior, so keep them exclusive.
+            if (nextLoopState && this.isShuffle) {
+                this.setShuffleState(false);
+            }
+
+            this.setStatus(nextLoopState ? "Loop enabled" : "Loop disabled");
         });
 
         this.audio.addEventListener("loadedmetadata", () => {
@@ -230,45 +192,19 @@ class VibePlayer {
         });
 
         this.shuffleButton.addEventListener("click", () => {
-            this.isShuffle = !this.isShuffle;
-            this.shuffleButton.textContent = this.isShuffle ? "Shuffle on" : "Shuffle off";
-            this.shuffleButton.classList.toggle("chip-button-active", this.isShuffle);
-            this.shuffleButton.setAttribute("aria-pressed", String(this.isShuffle));
-            this.setStatus(this.isShuffle ? "Shuffle enabled" : "Shuffle disabled");
-        });
+            const nextShuffleState = !this.isShuffle;
+            this.setShuffleState(nextShuffleState);
 
-        this.uploadButton.addEventListener("click", () => this.fileInput.click());
-        this.fileInput.addEventListener("change", (e) => this.handleFileUpload(e));
+            if (nextShuffleState && this.audio.loop) {
+                this.setLoopState(false);
+            }
+
+            this.setStatus(nextShuffleState ? "Shuffle enabled" : "Shuffle disabled");
+        });
 
         document.addEventListener("keydown", (event) => this.handleKeyboard(event));
         window.addEventListener("pointerdown", this.handleFirstInteraction, { once: true });
         window.addEventListener("keydown", this.handleFirstInteraction, { once: true });
-    }
-
-    async handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const trackData = {
-            title: file.name.replace(/\.[^/.]+$/, ""),
-            artist: "Local File",
-            blob: file,
-            mood: "Stored locally in your browser.",
-            note: "This track persists across reloads.",
-            accent: "#ffd166"
-        };
-
-        if (this.db) {
-            const transaction = this.db.transaction(["tracks"], "readwrite");
-            const store = transaction.objectStore("tracks");
-            store.add(trackData);
-        }
-
-        await this.loadLocalTracks();
-        this.renderTrackList();
-        this.renderSourceCards();
-        this.loadTrack(this.tracks.length - 1, true);
-        this.setStatus("Track saved to browser storage");
     }
 
     handleKeyboard(event) {
@@ -398,6 +334,20 @@ class VibePlayer {
         }
     }
 
+    setLoopState(isLooping) {
+        this.audio.loop = isLooping;
+        this.loopButton.textContent = isLooping ? "Loop on" : "Loop off";
+        this.loopButton.classList.toggle("chip-button-active", isLooping);
+        this.loopButton.setAttribute("aria-pressed", String(isLooping));
+    }
+
+    setShuffleState(isShuffleEnabled) {
+        this.isShuffle = isShuffleEnabled;
+        this.shuffleButton.textContent = isShuffleEnabled ? "Shuffle on" : "Shuffle off";
+        this.shuffleButton.classList.toggle("chip-button-active", isShuffleEnabled);
+        this.shuffleButton.setAttribute("aria-pressed", String(isShuffleEnabled));
+    }
+
     setStatus(message) {
         this.statusPill.textContent = message;
 
@@ -513,7 +463,7 @@ class VibePlayer {
             description.textContent = `${track.artist} · ${getSourceLabel(track.src)}`;
 
             const source = document.createElement("p");
-            source.textContent = track.src.startsWith('blob:') ? 'Stored locally' : track.src;
+            source.textContent = track.src;
 
             const button = document.createElement("button");
             button.type = "button";
@@ -562,7 +512,7 @@ class VibePlayer {
             },
             seekforward: (details) => {
                 const offset = details && typeof details.seekOffset === "number" ? details.seekOffset : 10;
-                this.audio.currentTime = clamp(this.audio.currentTime + 5, 0, this.audio.duration || 0);
+                this.audio.currentTime = clamp(this.audio.currentTime + offset, 0, this.audio.duration || 0);
                 this.updateProgress();
             },
             seekto: (details) => {
