@@ -168,11 +168,18 @@ class VibePlayer {
             
             window.onAndroidAudioSync = (syncedTracks) => {
                 if (syncedTracks && syncedTracks.length > 0) {
-                    this.tracks = [...this.tracks, ...syncedTracks];
-                    this.renderTrackList();
-                    this.setStatus(`Synced ${syncedTracks.length} device songs`);
+                    const existingSrcs = new Set(this.tracks.map(t => t.src));
+                    const newTracks = syncedTracks.filter(t => !existingSrcs.has(t.src));
+
+                    if (newTracks.length > 0) {
+                        this.tracks = [...this.tracks, ...newTracks];
+                        this.renderTrackList();
+                        this.setStatus(`Synced ${newTracks.length} new device songs`);
+                    } else {
+                        this.setStatus("All device songs are already synced");
+                    }
                 } else {
-                    this.setStatus("No new songs found");
+                    this.setStatus("No device songs found");
                 }
             };
         }
