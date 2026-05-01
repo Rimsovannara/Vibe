@@ -26,19 +26,29 @@ import androidx.webkit.WebViewClientCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import fi.iki.elide.nanohttpd.NanoHTTPD;
 
 import java.io.InputStream;
 
 public final class MainActivity extends Activity {
     private static final String HOME_URL = "https://appassets.androidplatform.net/assets/www/index.html";
     private static final int PERMISSION_REQUEST_CODE = 100;
+    private static final int AUDIO_SERVER_PORT = 8080;
 
     private WebView webView;
     private WebViewAssetLoader assetLoader;
+    private AudioServer audioServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        audioServer = new AudioServer(AUDIO_SERVER_PORT, getContentResolver());
+        try {
+            audioServer.start();
+        } catch (java.io.IOException e) {
+            Log.e("VibeApp", "Could not start audio server", e);
+        }
 
         webView = new WebView(this);
         webView.setLayoutParams(new ViewGroup.LayoutParams(
@@ -76,6 +86,10 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (audioServer != null) {
+            audioServer.stop();
+        }
+
         if (webView != null) {
             ViewGroup parent = (ViewGroup) webView.getParent();
             if (parent != null) {
@@ -183,7 +197,7 @@ public final class MainActivity extends Activity {
                             JSONObject track = new JSONObject();
                             track.put("title", title);
                             track.put("artist", artist);
-                            track.put("src", "https://appassets.androidplatform.net/device_audio/" + id + ".mp3");
+                            track.put("src", "http://127.0.0.1:" + AUDIO_SERVER_PORT + "/audio/" + id);
                             track.put("mood", "From your device");
                             track.put("note", "Synced automatically by the Vibe Android app.");
                             track.put("accent", "#8a5bff");
@@ -210,6 +224,85 @@ public final class MainActivity extends Activity {
         }).start();
     }
 
+    private static class AudioServer extends NanoHTTPD {
+        private final android.content.ContentResolver resolver;
+
+        public AudioServer(int port, android.content.ContentResolver resolver) {
+            super(port);
+            this.resolver = resolver;
+        }
+
+        @Override
+        public Response serve(IHTTPSession session) {
+            String uri = session.getUri();
+            if (!uri.startsWith("/audio/")) {
+                return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
+            }
+            
+            String idStr = uri.substring(uri.lastIndexOf("/") + 1);
+            if (idStr.isEmpty()) return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Bad Request");
+
+            try {
+                long id = Long.parseLong(idStr);
+                Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+
+                android.os.ParcelFileDescriptor pfd = resolver.openFileDescriptor(contentUri, "r");
+                if (pfd == null) return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
+
+                java.io.FileInputStream fis = new java.io.FileInputStream(pfd.getFileDescriptor());
+                long fileLength = pfd.getStatSize();
+                
+                // Fallback for UNKNOWN_LENGTH (Telegram files, etc.)
+                if (fileLength == android.content.res.AssetFileDescriptor.UNKNOWN_LENGTH || fileLength <= 0) {
+                     try (Cursor c = resolver.query(contentUri, new String[]{MediaStore.Audio.Media.SIZE}, null, null, null)) {
+                        if (c != null && c.moveToFirst()) {
+                            fileLength = c.getLong(0);
+                        }
+                    }
+                }
+                
+                if (fileLength <= 0) {
+                     fis.close();
+                     pfd.close();
+                     return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Unknown File Length");
+                }
+
+                String mimeType = resolver.getType(contentUri);
+                if (mimeType == null) mimeType = "audio/mpeg";
+
+                String rangeHeader = session.getHeaders().get("range");
+                long start = 0;
+                long end = fileLength - 1;
+
+                if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+                    String[] parts = rangeHeader.substring(6).split("-");
+                    start = Long.parseLong(parts[0]);
+                    if (parts.length > 1 && !parts[1].isEmpty()) {
+                        end = Long.parseLong(parts[1]);
+                    }
+                }
+
+                if (end > fileLength - 1) end = fileLength - 1;
+                long contentLength = end - start + 1;
+
+                if (start > 0) {
+                    fis.getChannel().position(start);
+                }
+
+                Response res = newFixedLengthResponse(Response.Status.PARTIAL_CONTENT, mimeType, fis, contentLength);
+                res.addHeader("Accept-Ranges", "bytes");
+                res.addHeader("Content-Length", String.valueOf(contentLength));
+                res.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
+                res.addHeader("Access-Control-Allow-Origin", "*");
+
+                return res;
+            } catch (Exception e) {
+                Log.e("VibeApp", "AudioServer error", e);
+                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Error: " + e.getMessage());
+            }
+        }
+    }
+
     private final class LocalContentWebViewClient extends WebViewClientCompat {
         private final WebViewAssetLoader assetLoader;
 
@@ -219,87 +312,13 @@ public final class MainActivity extends Activity {
 
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-            Uri url = request.getUrl();
-            if ("appassets.androidplatform.net".equals(url.getHost()) && url.getPath() != null && url.getPath().startsWith("/device_audio/")) {
-                try {
-                    String idStr = url.getPath().replaceAll("[^0-9]", "");
-                    if (idStr.isEmpty()) return null;
-                    long id = Long.parseLong(idStr);
-                    Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
-                    
-                    android.os.ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(contentUri, "r");
-                    if (pfd == null) return null;
-                    
-                    long totalSize = pfd.getStatSize();
-                    java.io.FileInputStream fis = new java.io.FileInputStream(pfd.getFileDescriptor());
-                    
-                    String mimeType = getContentResolver().getType(contentUri);
-                    if (mimeType == null) mimeType = "audio/mpeg";
-                    
-                    java.util.Map<String, String> requestHeaders = request.getRequestHeaders();
-                    String range = requestHeaders != null ? requestHeaders.get("Range") : null;
-                    
-                    if (range != null && range.startsWith("bytes=")) {
-                        String[] bounds = range.substring(6).split("-");
-                        long start = Long.parseLong(bounds[0]);
-                        long end = bounds.length > 1 && !bounds[1].isEmpty() ? Long.parseLong(bounds[1]) : totalSize - 1;
-                        
-                        if (end > totalSize - 1) end = totalSize - 1;
-                        long length = end - start + 1;
-                        fis.getChannel().position(start);
-                        
-                        java.util.Map<String, String> headers = new java.util.HashMap<>();
-                        headers.put("Content-Range", "bytes " + start + "-" + end + "/" + totalSize);
-                        headers.put("Content-Length", String.valueOf(length));
-                        headers.put("Accept-Ranges", "bytes");
-                        headers.put("Content-Type", mimeType);
-                        headers.put("Access-Control-Allow-Origin", "*");
-                        
-                        // We must close the pfd when the stream closes. A custom stream isn't strictly necessary if Android handles it, but let's wrap it.
-                        InputStream wrappedStream = new InputStream() {
-                            @Override
-                            public int read() throws java.io.IOException { return fis.read(); }
-                            @Override
-                            public int read(byte[] b, int off, int len) throws java.io.IOException { return fis.read(b, off, len); }
-                            @Override
-                            public void close() throws java.io.IOException { fis.close(); pfd.close(); }
-                        };
-                        
-                        return new WebResourceResponse(mimeType, null, 206, "Partial Content", headers, wrappedStream);
-                    } else {
-                        java.util.Map<String, String> headers = new java.util.HashMap<>();
-                        headers.put("Content-Length", String.valueOf(totalSize));
-                        headers.put("Accept-Ranges", "bytes");
-                        headers.put("Content-Type", mimeType);
-                        headers.put("Access-Control-Allow-Origin", "*");
-                        
-                        InputStream wrappedStream = new InputStream() {
-                            @Override
-                            public int read() throws java.io.IOException { return fis.read(); }
-                            @Override
-                            public int read(byte[] b, int off, int len) throws java.io.IOException { return fis.read(b, off, len); }
-                            @Override
-                            public void close() throws java.io.IOException { fis.close(); pfd.close(); }
-                        };
-
-                        return new WebResourceResponse(mimeType, null, 200, "OK", headers, wrappedStream);
-                    }
-                } catch (Exception e) {
-                    Log.e("VibeApp", "Failed to serve media", e);
-                    return null;
-                }
-            }
             return assetLoader.shouldInterceptRequest(request.getUrl());
         }
 
         @Override
         @SuppressWarnings("deprecation")
         public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-            Uri parsedUrl = Uri.parse(url);
-            if ("appassets.androidplatform.net".equals(parsedUrl.getHost()) && parsedUrl.getPath() != null && parsedUrl.getPath().startsWith("/device_audio/")) {
-                 return null;
-            }
-            return assetLoader.shouldInterceptRequest(parsedUrl);
+            return assetLoader.shouldInterceptRequest(Uri.parse(url));
         }
     }
 }
