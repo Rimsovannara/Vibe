@@ -346,7 +346,7 @@ class VibePlayer {
         }
     }
 
-    loadTrack(index, autoplay = false) {
+    async loadTrack(index, autoplay = false) {
         this.currentIndex = (index + this.tracks.length) % this.tracks.length;
         const track = this.tracks[this.currentIndex];
         
@@ -369,12 +369,34 @@ class VibePlayer {
         this.updateMediaSessionState();
         this.updatePositionState();
 
-        if (this.currentBlobUrl) {
-            URL.revokeObjectURL(this.currentBlobUrl);
-            this.currentBlobUrl = null;
+        if (track.src.startsWith("https://appassets.androidplatform.net/device_audio/")) {
+            this.setStatus("Loading local track...");
+            try {
+                const response = await fetch(track.src);
+                if (!response.ok) throw new Error("Network response was not ok");
+                const blob = await response.blob();
+                
+                if (this.currentLoadTarget !== loadTarget) return;
+
+                if (this.currentBlobUrl) {
+                    URL.revokeObjectURL(this.currentBlobUrl);
+                }
+                this.currentBlobUrl = URL.createObjectURL(blob);
+                this.audio.src = this.currentBlobUrl;
+            } catch (err) {
+                if (this.currentLoadTarget === loadTarget) {
+                    this.setStatus("Error loading local track");
+                }
+                return;
+            }
+        } else {
+            if (this.currentBlobUrl) {
+                URL.revokeObjectURL(this.currentBlobUrl);
+                this.currentBlobUrl = null;
+            }
+            this.audio.src = track.src;
         }
-        
-        this.audio.src = track.src;
+
         this.audio.load();
 
         if (autoplay && this.currentLoadTarget === loadTarget) {

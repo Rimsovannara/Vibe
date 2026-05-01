@@ -210,50 +210,6 @@ public final class MainActivity extends Activity {
         }).start();
     }
 
-    private static class BoundedInputStream extends InputStream {
-        private final InputStream in;
-        private long bytesRemaining;
-
-        public BoundedInputStream(InputStream in, long size) {
-            this.in = in;
-            this.bytesRemaining = size;
-        }
-
-        @Override
-        public int read() throws java.io.IOException {
-            if (bytesRemaining <= 0) return -1;
-            int b = in.read();
-            if (b != -1) bytesRemaining--;
-            return b;
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len) throws java.io.IOException {
-            if (bytesRemaining <= 0) return -1;
-            int bytesToRead = (int) Math.min(len, bytesRemaining);
-            int bytesRead = in.read(b, off, bytesToRead);
-            if (bytesRead != -1) bytesRemaining -= bytesRead;
-            return bytesRead;
-        }
-        
-        @Override
-        public void close() throws java.io.IOException {
-            in.close();
-        }
-    }
-
-    private static void skipFully(InputStream in, long bytes) throws java.io.IOException {
-        long remaining = bytes;
-        while (remaining > 0) {
-            long skipped = in.skip(remaining);
-            if (skipped <= 0) {
-                if (in.read() == -1) break;
-                skipped = 1;
-            }
-            remaining -= skipped;
-        }
-    }
-
     private final class LocalContentWebViewClient extends WebViewClientCompat {
         private final WebViewAssetLoader assetLoader;
 
@@ -271,52 +227,18 @@ public final class MainActivity extends Activity {
                     long id = Long.parseLong(idStr);
                     Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
                     
-                    android.content.res.AssetFileDescriptor afd = getContentResolver().openAssetFileDescriptor(contentUri, "r");
-                    if (afd == null) return null;
+                    InputStream stream = getContentResolver().openInputStream(contentUri);
+                    if (stream == null) return null;
                     
-                    long totalSize = afd.getLength();
-                    if (totalSize == android.content.res.AssetFileDescriptor.UNKNOWN_LENGTH) {
-                        try (Cursor c = getContentResolver().query(contentUri, new String[]{MediaStore.Audio.Media.SIZE}, null, null, null)) {
-                            if (c != null && c.moveToFirst()) {
-                                totalSize = c.getLong(0);
-                            }
-                        }
-                        if (totalSize <= 0) return null;
-                    }
-
-                    java.io.FileInputStream fis = afd.createInputStream();
                     String mimeType = getContentResolver().getType(contentUri);
                     if (mimeType == null) mimeType = "audio/mpeg";
                     
-                    java.util.Map<String, String> requestHeaders = request.getRequestHeaders();
-                    String range = requestHeaders != null ? requestHeaders.get("Range") : null;
+                    java.util.Map<String, String> headers = new java.util.HashMap<>();
+                    headers.put("Access-Control-Allow-Origin", "*");
+                    headers.put("Content-Type", mimeType);
+                    headers.put("Cache-Control", "no-cache");
                     
-                    if (range != null && range.startsWith("bytes=")) {
-                        String[] bounds = range.substring(6).split("-");
-                        long start = Long.parseLong(bounds[0]);
-                        long end = bounds.length > 1 && !bounds[1].isEmpty() ? Long.parseLong(bounds[1]) : totalSize - 1;
-                        
-                        if (end > totalSize - 1) end = totalSize - 1;
-                        long length = end - start + 1;
-                        skipFully(fis, start);
-                        
-                        java.util.Map<String, String> headers = new java.util.HashMap<>();
-                        headers.put("Content-Range", "bytes " + start + "-" + end + "/" + totalSize);
-                        headers.put("Content-Length", String.valueOf(length));
-                        headers.put("Accept-Ranges", "bytes");
-                        headers.put("Content-Type", mimeType);
-                        headers.put("Access-Control-Allow-Origin", "*");
-                        
-                        return new WebResourceResponse(mimeType, null, 206, "Partial Content", headers, new BoundedInputStream(fis, length));
-                    } else {
-                        java.util.Map<String, String> headers = new java.util.HashMap<>();
-                        headers.put("Content-Length", String.valueOf(totalSize));
-                        headers.put("Accept-Ranges", "bytes");
-                        headers.put("Content-Type", mimeType);
-                        headers.put("Access-Control-Allow-Origin", "*");
-                        
-                        return new WebResourceResponse(mimeType, null, 200, "OK", headers, fis);
-                    }
+                    return new WebResourceResponse(mimeType, null, 200, "OK", headers, stream);
                 } catch (Exception e) {
                     Log.e("VibeApp", "Failed to serve media", e);
                     return null;
