@@ -62,6 +62,33 @@ This improves screen-off and background playback, but a web app still cannot kee
 is fully powered down. The realistic target here is background playback while the screen is locked or the
 browser is not foregrounded.
 
+## Android APK
+
+This repo now includes a native Android wrapper in `android/` that loads the existing Vibe site from
+bundled app assets inside a WebView.
+
+The Android module copies `index.html`, `sw.js`, `manifest.webmanifest`, and the full `assets/`
+directory into the app during the build, so the web player stays the single source of truth.
+
+Recommended build path:
+
+- Push changes to GitHub.
+- Run the `Build Android APK` GitHub Actions workflow.
+- Download the `vibe-debug-apk` artifact from that workflow run.
+
+If you want to build manually on a desktop with Android Studio or the Android SDK installed:
+
+```bash
+cd android
+./gradlew assembleDebug
+```
+
+If the build succeeds, the APK is written to:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
 ## Keyboard shortcuts
 
 - `Space`: play or pause
@@ -77,5 +104,6 @@ browser is not foregrounded.
 - `assets/css/styles.css`: visual design and responsive layout
 - `assets/icons/icon.svg`: app icon used by the page, manifest, and media session
 - `assets/js/app.js`: player logic and track list rendering
+- `android/`: native Android wrapper project
 - `manifest.webmanifest`: installable app metadata
 - `sw.js`: local shell caching for the hosted app

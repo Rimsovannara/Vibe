@@ -1,0 +1,53 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.rimsovannara.vibe'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.rimsovannara.vibe'
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs += ["$buildDir/generated/web-assets"]
+        }
+    }
+}
+
+tasks.register('syncWebAssets', Copy) {
+    from(rootProject.file('../index.html'))
+    from(rootProject.file('../manifest.webmanifest'))
+    from(rootProject.file('../sw.js'))
+    from(rootProject.file('../assets')) {
+        into('assets')
+    }
+    into(layout.buildDirectory.dir('generated/web-assets/www'))
+}
+
+tasks.named('preBuild').configure {
+    dependsOn(tasks.named('syncWebAssets'))
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
+
