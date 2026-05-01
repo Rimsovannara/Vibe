@@ -22,6 +22,46 @@ const tracks = [
         mood: "Hook-heavy late-night rap pop.",
         note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
         accent: "#ffd166"
+    },
+    {
+        title: "The Machine",
+        artist: "Reed Wonder, Aurora Olivas",
+        src: "./assets/audio/The Machine [BbgQ98LdIeM].mp3",
+        mood: "Sharp, cinematic alt-pop energy.",
+        note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
+        accent: "#90e0ef"
+    },
+    {
+        title: "Cry",
+        artist: "Cigarettes After Sex",
+        src: "./assets/audio/Cry [3XqqkrJENB4].mp3",
+        mood: "Slow, hazy midnight mood.",
+        note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
+        accent: "#cdb4db"
+    },
+    {
+        title: "Stitches (Lyrics)",
+        artist: "Shawn Mendes",
+        src: "./assets/audio/Stitches [a4MYXwA6oxo].mp3",
+        mood: "Bright pop tension with a strong hook.",
+        note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
+        accent: "#ffadad"
+    },
+    {
+        title: "Treat You Better (Lyrics)",
+        artist: "Shawn Mendes",
+        src: "./assets/audio/Treat You Better [rspUJPuEwmg].mp3",
+        mood: "Clean radio-pop singalong energy.",
+        note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
+        accent: "#b8f2e6"
+    },
+    {
+        title: "bye [Altare Remix]",
+        artist: "Ariana Grande",
+        src: "./assets/audio/bye Altare Remix [agneRtEe-t8].mp3",
+        mood: "Glossy remix lift with late-night momentum.",
+        note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
+        accent: "#f7cad0"
     }
 ];
 
