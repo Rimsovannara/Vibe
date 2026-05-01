@@ -36,19 +36,20 @@ import java.io.InputStream;
 public final class MainActivity extends Activity {
     private static final String HOME_URL = "https://appassets.androidplatform.net/assets/www/index.html";
     private static final int PERMISSION_REQUEST_CODE = 100;
-    private static final int AUDIO_SERVER_PORT = 8080;
 
     private WebView webView;
     private WebViewAssetLoader assetLoader;
     private AudioServer audioServer;
+    private int audioServerPort = 8080;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        audioServer = new AudioServer(AUDIO_SERVER_PORT, getContentResolver());
+        audioServer = new AudioServer(0, getContentResolver());
         try {
             audioServer.start();
+            audioServerPort = audioServer.getListeningPort();
         } catch (java.io.IOException e) {
             Log.e("VibeApp", "Could not start audio server", e);
         }
@@ -200,7 +201,7 @@ public final class MainActivity extends Activity {
                             JSONObject track = new JSONObject();
                             track.put("title", title);
                             track.put("artist", artist);
-                            track.put("src", "http://127.0.0.1:" + AUDIO_SERVER_PORT + "/audio/" + id);
+                            track.put("src", "http://127.0.0.1:" + audioServerPort + "/audio/" + id);
                             track.put("mood", "From your device");
                             track.put("note", "Synced automatically by the Vibe Android app.");
                             track.put("accent", "#8a5bff");
@@ -252,7 +253,7 @@ public final class MainActivity extends Activity {
                 android.os.ParcelFileDescriptor pfd = resolver.openFileDescriptor(contentUri, "r");
                 if (pfd == null) return newFixedLengthResponse(Status.NOT_FOUND, "text/plain", "Not Found");
 
-                java.io.FileInputStream fis = new java.io.FileInputStream(pfd.getFileDescriptor());
+                java.io.FileInputStream fis = new android.os.ParcelFileDescriptor.AutoCloseInputStream(pfd);
                 long fileLength = pfd.getStatSize();
                 
                 // Fallback for UNKNOWN_LENGTH (Telegram files, etc.)
@@ -266,7 +267,6 @@ public final class MainActivity extends Activity {
                 
                 if (fileLength <= 0) {
                      fis.close();
-                     pfd.close();
                      return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Unknown File Length");
                 }
 
@@ -277,25 +277,36 @@ public final class MainActivity extends Activity {
                 long start = 0;
                 long end = fileLength - 1;
 
+                Response res;
                 if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
-                    String[] parts = rangeHeader.substring(6).split("-");
-                    start = Long.parseLong(parts[0]);
-                    if (parts.length > 1 && !parts[1].isEmpty()) {
-                        end = Long.parseLong(parts[1]);
+                    try {
+                        String[] parts = rangeHeader.substring(6).split("-");
+                        start = Long.parseLong(parts[0]);
+                        if (parts.length > 1 && !parts[1].isEmpty()) {
+                            end = Long.parseLong(parts[1]);
+                        }
+                    } catch (NumberFormatException ignored) {}
+
+                    if (end > fileLength - 1) end = fileLength - 1;
+                    long contentLength = end - start + 1;
+
+                    if (start > 0) {
+                        try {
+                            fis.getChannel().position(start);
+                        } catch (Exception e) {
+                            fis.skip(start);
+                        }
                     }
+
+                    res = newFixedLengthResponse(Status.PARTIAL_CONTENT, mimeType, fis, contentLength);
+                    res.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
+                    res.addHeader("Content-Length", String.valueOf(contentLength));
+                } else {
+                    res = newFixedLengthResponse(Status.OK, mimeType, fis, fileLength);
+                    res.addHeader("Content-Length", String.valueOf(fileLength));
                 }
 
-                if (end > fileLength - 1) end = fileLength - 1;
-                long contentLength = end - start + 1;
-
-                if (start > 0) {
-                    fis.getChannel().position(start);
-                }
-
-                Response res = newFixedLengthResponse(Status.PARTIAL_CONTENT, mimeType, fis, contentLength);
                 res.addHeader("Accept-Ranges", "bytes");
-                res.addHeader("Content-Length", String.valueOf(contentLength));
-                res.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
                 res.addHeader("Access-Control-Allow-Origin", "*");
 
                 return res;
