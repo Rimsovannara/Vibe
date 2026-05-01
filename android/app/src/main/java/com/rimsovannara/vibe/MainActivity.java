@@ -231,7 +231,13 @@ public final class MainActivity extends Activity {
                     if (afd == null) return null;
                     
                     long totalSize = afd.getLength();
+                    if (totalSize == android.content.res.AssetFileDescriptor.UNKNOWN_LENGTH) {
+                        return null;
+                    }
+
                     java.io.FileInputStream fis = afd.createInputStream();
+                    String mimeType = getContentResolver().getType(contentUri);
+                    if (mimeType == null) mimeType = "audio/mpeg";
                     
                     java.util.Map<String, String> requestHeaders = request.getRequestHeaders();
                     String range = requestHeaders != null ? requestHeaders.get("Range") : null;
@@ -243,22 +249,22 @@ public final class MainActivity extends Activity {
                         
                         if (end > totalSize - 1) end = totalSize - 1;
                         long length = end - start + 1;
-                        fis.skip(start);
+                        fis.getChannel().position(start);
                         
                         java.util.Map<String, String> headers = new java.util.HashMap<>();
                         headers.put("Content-Range", "bytes " + start + "-" + end + "/" + totalSize);
                         headers.put("Content-Length", String.valueOf(length));
                         headers.put("Accept-Ranges", "bytes");
-                        headers.put("Content-Type", "audio/mpeg");
+                        headers.put("Content-Type", mimeType);
                         
-                        return new WebResourceResponse("audio/mpeg", null, 206, "Partial Content", headers, fis);
+                        return new WebResourceResponse(mimeType, null, 206, "Partial Content", headers, fis);
                     } else {
                         java.util.Map<String, String> headers = new java.util.HashMap<>();
                         headers.put("Content-Length", String.valueOf(totalSize));
                         headers.put("Accept-Ranges", "bytes");
-                        headers.put("Content-Type", "audio/mpeg");
+                        headers.put("Content-Type", mimeType);
                         
-                        return new WebResourceResponse("audio/mpeg", null, 200, "OK", headers, fis);
+                        return new WebResourceResponse(mimeType, null, 200, "OK", headers, fis);
                     }
                 } catch (Exception e) {
                     Log.e("VibeApp", "Failed to serve media", e);
