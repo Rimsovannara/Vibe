@@ -104,6 +104,8 @@ class VibePlayer {
         this.statusTimeout = null;
         this.isScrubbing = false;
         this.animationFrameId = null;
+        this.currentBlobUrl = null;
+        this.currentLoadTarget = null;
 
         this.audio = document.getElementById("audio");
         this.trackTitle = document.getElementById("track-title");
@@ -344,12 +346,12 @@ class VibePlayer {
         }
     }
 
-    loadTrack(index, autoplay = false) {
+    async loadTrack(index, autoplay = false) {
         this.currentIndex = (index + this.tracks.length) % this.tracks.length;
         const track = this.tracks[this.currentIndex];
-
-        this.audio.src = track.src;
-        this.audio.load();
+        
+        const loadTarget = track.src;
+        this.currentLoadTarget = loadTarget;
 
         this.trackTitle.textContent = track.title;
         this.trackArtist.textContent = track.artist;
@@ -367,7 +369,36 @@ class VibePlayer {
         this.updateMediaSessionState();
         this.updatePositionState();
 
-        if (autoplay) {
+        if (track.src.startsWith("https://appassets.androidplatform.net/device_audio/")) {
+            this.setStatus("Loading local track...");
+            try {
+                const response = await fetch(track.src);
+                const blob = await response.blob();
+                
+                if (this.currentLoadTarget !== loadTarget) return;
+
+                if (this.currentBlobUrl) {
+                    URL.revokeObjectURL(this.currentBlobUrl);
+                }
+                this.currentBlobUrl = URL.createObjectURL(blob);
+                this.audio.src = this.currentBlobUrl;
+            } catch (err) {
+                if (this.currentLoadTarget === loadTarget) {
+                    this.setStatus("Error loading local track");
+                }
+                return;
+            }
+        } else {
+            if (this.currentBlobUrl) {
+                URL.revokeObjectURL(this.currentBlobUrl);
+                this.currentBlobUrl = null;
+            }
+            this.audio.src = track.src;
+        }
+
+        this.audio.load();
+
+        if (autoplay && this.currentLoadTarget === loadTarget) {
             this.playCurrentTrack();
         }
     }
