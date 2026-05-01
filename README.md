@@ -1,5 +1,9 @@
 # Vibe
 
+A better home for the tracks you keep coming back to.
+
+👉 **Live Demo:** [https://rimsovannara.github.io/Vibe/](https://rimsovannara.github.io/Vibe/)
+
 Vibe is a small static listening room built with HTML, CSS, and JavaScript.
 
 It now includes:
