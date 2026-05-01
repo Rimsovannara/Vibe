@@ -62,6 +62,22 @@ const tracks = [
         mood: "Glossy remix lift with late-night momentum.",
         note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
         accent: "#f7cad0"
+    },
+    {
+        title: "Self Aware (Lyrics)",
+        artist: "Temper City",
+        src: "./assets/audio/Self Aware [pGsgAOmkS40].mp3",
+        mood: "Moody alt-pop with a tight pulse.",
+        note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
+        accent: "#a9def9"
+    },
+    {
+        title: "505",
+        artist: "Arctic Monkeys",
+        src: "./assets/audio/505 [MrmPDUvKyLs].mp3",
+        mood: "Slow-build indie tension and release.",
+        note: "Converted from the provided YouTube link and stored locally as an MP3 for Vibe.",
+        accent: "#c3bef0"
     }
 ];
 
