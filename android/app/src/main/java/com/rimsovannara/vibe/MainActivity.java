@@ -210,6 +210,38 @@ public final class MainActivity extends Activity {
         }).start();
     }
 
+    private static class BoundedInputStream extends InputStream {
+        private final InputStream in;
+        private long bytesRemaining;
+
+        public BoundedInputStream(InputStream in, long size) {
+            this.in = in;
+            this.bytesRemaining = size;
+        }
+
+        @Override
+        public int read() throws java.io.IOException {
+            if (bytesRemaining <= 0) return -1;
+            int b = in.read();
+            if (b != -1) bytesRemaining--;
+            return b;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws java.io.IOException {
+            if (bytesRemaining <= 0) return -1;
+            int bytesToRead = (int) Math.min(len, bytesRemaining);
+            int bytesRead = in.read(b, off, bytesToRead);
+            if (bytesRead != -1) bytesRemaining -= bytesRead;
+            return bytesRead;
+        }
+        
+        @Override
+        public void close() throws java.io.IOException {
+            in.close();
+        }
+    }
+
     private final class LocalContentWebViewClient extends WebViewClientCompat {
         private final WebViewAssetLoader assetLoader;
 
@@ -256,13 +288,15 @@ public final class MainActivity extends Activity {
                         headers.put("Content-Length", String.valueOf(length));
                         headers.put("Accept-Ranges", "bytes");
                         headers.put("Content-Type", mimeType);
+                        headers.put("Access-Control-Allow-Origin", "*");
                         
-                        return new WebResourceResponse(mimeType, null, 206, "Partial Content", headers, fis);
+                        return new WebResourceResponse(mimeType, null, 206, "Partial Content", headers, new BoundedInputStream(fis, length));
                     } else {
                         java.util.Map<String, String> headers = new java.util.HashMap<>();
                         headers.put("Content-Length", String.valueOf(totalSize));
                         headers.put("Accept-Ranges", "bytes");
                         headers.put("Content-Type", mimeType);
+                        headers.put("Access-Control-Allow-Origin", "*");
                         
                         return new WebResourceResponse(mimeType, null, 200, "OK", headers, fis);
                     }
