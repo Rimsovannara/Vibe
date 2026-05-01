@@ -236,12 +236,26 @@ body::before {
             rgba(255, 255, 255, 0.78) 0 6px,
             transparent 6px 16px
         );
+    animation: bar-pulse 2s ease-in-out infinite alternate;
 }
 
 .player-visual::after {
     inset: auto 24px 118px 24px;
     height: 38px;
     opacity: 0.15;
+    animation-delay: -0.5s;
+    animation-duration: 3s;
+}
+
+@keyframes bar-pulse {
+    from {
+        opacity: 0.15;
+        transform: scaleY(0.95);
+    }
+    to {
+        opacity: 0.28;
+        transform: scaleY(1.05);
+    }
 }
 
 .visual-copy {
@@ -271,14 +285,18 @@ body::before {
     font-size: 1rem;
 }
 
-.player-meta,
-.section-heading,
 .utility-row,
 .time-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+}
+
+.utility-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .player-meta h2,

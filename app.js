@@ -40,6 +40,7 @@ class VibePlayer {
     constructor(trackData) {
         this.tracks = trackData;
         this.currentIndex = 0;
+        this.isShuffle = false;
         this.statusTimeout = null;
 
         this.audio = document.getElementById("audio");
@@ -56,7 +57,9 @@ class VibePlayer {
         this.currentTime = document.getElementById("current-time");
         this.duration = document.getElementById("duration");
         this.loopButton = document.getElementById("loop-button");
+        this.shuffleButton = document.getElementById("shuffle-button");
         this.volume = document.getElementById("volume");
+        this.volumeLabel = document.getElementById("volume-label");
         this.statusPill = document.getElementById("status-pill");
         this.helperText = document.getElementById("helper-text");
         this.playerVisual = document.getElementById("player-visual");
@@ -65,12 +68,18 @@ class VibePlayer {
         this.heroPlayButton = document.querySelector('[data-action="toggle-play"]');
 
         this.handleFirstInteraction = () => {
-            if (this.audio.paused) {
+            if (this.audio.paused && this.audio.src) {
                 this.playCurrentTrack();
+                this.cleanupFirstInteraction();
             }
         };
 
         this.init();
+    }
+
+    cleanupFirstInteraction() {
+        window.removeEventListener("pointerdown", this.handleFirstInteraction);
+        window.removeEventListener("keydown", this.handleFirstInteraction);
     }
 
     init() {
@@ -168,8 +177,17 @@ class VibePlayer {
             this.helperText.textContent = "Check the track path in app.js if a song does not play.";
         });
 
+        this.shuffleButton.addEventListener("click", () => {
+            this.isShuffle = !this.isShuffle;
+            this.shuffleButton.textContent = this.isShuffle ? "Shuffle on" : "Shuffle off";
+            this.shuffleButton.classList.toggle("chip-button-active", this.isShuffle);
+            this.shuffleButton.setAttribute("aria-pressed", String(this.isShuffle));
+            this.setStatus(this.isShuffle ? "Shuffle enabled" : "Shuffle disabled");
+        });
+
         document.addEventListener("keydown", (event) => this.handleKeyboard(event));
         window.addEventListener("pointerdown", this.handleFirstInteraction, { once: true });
+        window.addEventListener("keydown", this.handleFirstInteraction, { once: true });
     }
 
     handleKeyboard(event) {
@@ -188,13 +206,15 @@ class VibePlayer {
 
         if (event.code === "ArrowRight") {
             event.preventDefault();
-            this.audio.currentTime = clamp(this.audio.currentTime + 5, 0, this.audio.duration || 0);
+            const duration = Number.isFinite(this.audio.duration) ? this.audio.duration : 0;
+            this.audio.currentTime = clamp(this.audio.currentTime + 5, 0, duration);
             this.updateProgress();
         }
 
         if (event.code === "ArrowLeft") {
             event.preventDefault();
-            this.audio.currentTime = clamp(this.audio.currentTime - 5, 0, this.audio.duration || 0);
+            const duration = Number.isFinite(this.audio.duration) ? this.audio.duration : 0;
+            this.audio.currentTime = clamp(this.audio.currentTime - 5, 0, duration);
             this.updateProgress();
         }
 
@@ -241,13 +261,22 @@ class VibePlayer {
     }
 
     changeTrack(direction) {
-        const nextIndex = this.currentIndex + direction;
-        this.loadTrack(nextIndex, true);
+        if (this.isShuffle && this.tracks.length > 1) {
+            let nextIndex = this.currentIndex;
+            while (nextIndex === this.currentIndex) {
+                nextIndex = Math.floor(Math.random() * this.tracks.length);
+            }
+            this.loadTrack(nextIndex, true);
+        } else {
+            const nextIndex = this.currentIndex + direction;
+            this.loadTrack(nextIndex, true);
+        }
     }
 
     togglePlayback() {
         if (this.audio.paused) {
             this.playCurrentTrack();
+            this.cleanupFirstInteraction();
             return;
         }
 
@@ -255,7 +284,9 @@ class VibePlayer {
     }
 
     playCurrentTrack() {
-        this.audio.play().catch(() => {
+        this.audio.play().then(() => {
+            this.cleanupFirstInteraction();
+        }).catch(() => {
             this.setStatus("Press play to start audio");
             this.helperText.textContent = "Browser autoplay rules blocked playback until you interacted with the page.";
         });
@@ -281,6 +312,9 @@ class VibePlayer {
     updateVolumeLabel() {
         const percentage = Math.round(this.audio.volume * 100);
         this.volume.setAttribute("aria-label", `Volume ${percentage} percent`);
+        if (this.volumeLabel) {
+            this.volumeLabel.textContent = `Volume ${percentage}%`;
+        }
     }
 
     setStatus(message) {

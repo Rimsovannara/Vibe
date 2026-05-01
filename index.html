@@ -87,11 +87,16 @@
                 </div>
 
                 <div class="utility-row">
-                    <button class="chip-button chip-button-active" id="loop-button" type="button" aria-pressed="true">
-                        Loop on
-                    </button>
+                    <div class="utility-group">
+                        <button class="chip-button chip-button-active" id="loop-button" type="button" aria-pressed="true">
+                            Loop on
+                        </button>
+                        <button class="chip-button" id="shuffle-button" type="button" aria-pressed="false">
+                            Shuffle off
+                        </button>
+                    </div>
                     <label class="volume-control" for="volume">
-                        <span>Volume</span>
+                        <span id="volume-label">Volume 88%</span>
                         <input id="volume" type="range" min="0" max="100" value="88">
                     </label>
                 </div>
