@@ -27,6 +27,8 @@ import androidx.webkit.WebViewClientCompat;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import fi.iki.elide.nanohttpd.NanoHTTPD;
+import fi.iki.elide.nanohttpd.NanoHTTPD.Response;
+import fi.iki.elide.nanohttpd.NanoHTTPD.IHTTPSession;
 
 import java.io.InputStream;
 
