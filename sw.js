@@ -1,4 +1,4 @@
-const CACHE_NAME = "vibe-shell-v1";
+const CACHE_NAME = "vibe-shell-v2";
 const SHELL_ASSETS = [
     "./",
     "./index.html",
@@ -39,24 +39,50 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                return cachedResponse;
-            }
+    const isShellAsset =
+        requestUrl.pathname.endsWith(".html") ||
+        requestUrl.pathname.endsWith(".css") ||
+        requestUrl.pathname.endsWith(".js") ||
+        requestUrl.pathname.endsWith(".svg") ||
+        requestUrl.pathname.endsWith(".webmanifest") ||
+        requestUrl.pathname === "/" ||
+        requestUrl.pathname.endsWith("/Vibe/") ||
+        requestUrl.pathname.endsWith("/Vibe");
 
-            return fetch(event.request).then((networkResponse) => {
-                if (
-                    networkResponse &&
-                    networkResponse.status === 200 &&
-                    (requestUrl.pathname.endsWith(".mp3") || requestUrl.pathname.endsWith(".html") || requestUrl.pathname.endsWith(".css") || requestUrl.pathname.endsWith(".js") || requestUrl.pathname.endsWith(".svg") || requestUrl.pathname.endsWith(".webmanifest"))
-                ) {
-                    const responseClone = networkResponse.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+    const isMp3Asset = requestUrl.pathname.endsWith(".mp3");
+
+    if (isShellAsset) {
+        event.respondWith(
+            fetch(event.request)
+                .then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseClone = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+                    }
+
+                    return networkResponse;
+                })
+                .catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    if (isMp3Asset) {
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    return cachedResponse;
                 }
 
-                return networkResponse;
-            });
-        })
-    );
+                return fetch(event.request).then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseClone = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+                    }
+
+                    return networkResponse;
+                });
+            })
+        );
+    }
 });
