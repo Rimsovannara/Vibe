@@ -102,6 +102,8 @@ class VibePlayer {
         this.currentIndex = 0;
         this.isShuffle = false;
         this.statusTimeout = null;
+        this.isScrubbing = false;
+        this.animationFrameId = null;
 
         this.audio = document.getElementById("audio");
         this.trackTitle = document.getElementById("track-title");
@@ -184,6 +186,18 @@ class VibePlayer {
             this.currentTime.textContent = formatTime(nextTime);
         });
 
+        this.progress.addEventListener("pointerdown", () => {
+            this.isScrubbing = true;
+        });
+
+        window.addEventListener("pointerup", () => {
+            if (this.isScrubbing) {
+                this.isScrubbing = false;
+                // Force an update to sync with audio once scrubbing ends
+                this.updateProgress();
+            }
+        });
+
         this.volume.addEventListener("input", () => {
             this.audio.volume = clamp(Number(this.volume.value) / 100, 0, 1);
             this.updateVolumeLabel();
@@ -206,14 +220,13 @@ class VibePlayer {
             this.updateProgress();
         });
 
-        this.audio.addEventListener("timeupdate", () => this.updateProgress());
-
         this.audio.addEventListener("play", () => {
             this.playButton.textContent = "Pause";
             this.heroPlayButton.textContent = "Pause current track";
             this.setStatus("Playing now");
             this.updateTrackButtons();
             this.updateMediaSessionState();
+            this.startProgressLoop();
         });
 
         this.audio.addEventListener("pause", () => {
@@ -222,12 +235,14 @@ class VibePlayer {
             this.setStatus("Paused");
             this.updateTrackButtons();
             this.updateMediaSessionState();
+            this.stopProgressLoop();
         });
 
         this.audio.addEventListener("waiting", () => this.setStatus("Buffering..."));
         this.audio.addEventListener("ratechange", () => this.updatePositionState());
         this.audio.addEventListener("durationchange", () => this.updatePositionState());
         this.audio.addEventListener("ended", () => {
+            this.stopProgressLoop();
             if (!this.audio.loop && this.tracks.length > 1) {
                 this.changeTrack(1);
                 return;
@@ -364,14 +379,34 @@ class VibePlayer {
         this.playCurrentTrack();
     }
 
+    startProgressLoop() {
+        if (this.animationFrameId !== null) return;
+        const loop = () => {
+            this.updateProgress();
+            this.animationFrameId = requestAnimationFrame(loop);
+        };
+        this.animationFrameId = requestAnimationFrame(loop);
+    }
+
+    stopProgressLoop() {
+        if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
+
     updateProgress() {
         if (!Number.isFinite(this.audio.duration) || this.audio.duration <= 0) {
-            this.progress.value = "0";
+            if (!this.isScrubbing) {
+                this.progress.value = "0";
+            }
             return;
         }
 
         const ratio = (this.audio.currentTime / this.audio.duration) * 100;
-        this.progress.value = String(ratio);
+        if (!this.isScrubbing) {
+            this.progress.value = String(ratio);
+        }
         this.currentTime.textContent = formatTime(this.audio.currentTime);
         this.duration.textContent = formatTime(this.audio.duration);
         this.updatePositionState();

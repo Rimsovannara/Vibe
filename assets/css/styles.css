@@ -235,6 +235,7 @@ body::before {
             transparent 6px 16px
         );
     animation: bar-pulse 2s ease-in-out infinite alternate;
+    will-change: transform, opacity;
 }
 
 .player-visual::after {
