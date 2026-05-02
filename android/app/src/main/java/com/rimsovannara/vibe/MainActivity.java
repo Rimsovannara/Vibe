@@ -276,7 +276,8 @@ public final class MainActivity extends Activity {
                     MediaStore.Audio.Media._ID,
                     MediaStore.Audio.Media.TITLE,
                     MediaStore.Audio.Media.ARTIST,
-                    MediaStore.Audio.Media.IS_MUSIC
+                    MediaStore.Audio.Media.IS_MUSIC,
+                    MediaStore.Audio.Media.DATA
                 };
                 
                 String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + 
@@ -296,8 +297,14 @@ public final class MainActivity extends Activity {
                         int idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID);
                         int titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE);
                         int artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST);
+                        int dataCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
                         
                         while (cursor.moveToNext()) {
+                            String dataPath = cursor.getString(dataCol);
+                            if (dataPath != null && !new java.io.File(dataPath).exists()) {
+                                continue;
+                            }
+                            
                             long id = cursor.getLong(idCol);
                             String title = cursor.getString(titleCol);
                             String artist = cursor.getString(artistCol);
