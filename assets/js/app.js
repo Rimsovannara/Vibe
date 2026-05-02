@@ -129,7 +129,8 @@ class VibePlayer {
         this.helperText = document.getElementById("helper-text");
         this.playerVisual = document.getElementById("player-visual");
         this.vinylDisc = document.querySelector(".vinyl-disc");
-        this.heroPlayButton = null;
+        this.heroPlayButton = null; // removed in redesign
+        this.trackNote = null;      // removed in redesign
         this.visualizer = document.getElementById("visualizer");
 
         window.VibePlayerInstance = this;
@@ -210,7 +211,7 @@ class VibePlayer {
 
     bindEvents() {
         this.playButton.addEventListener("click", () => this.togglePlayback());
-        this.heroPlayButton.addEventListener("click", () => this.togglePlayback());
+        if (this.heroPlayButton) this.heroPlayButton.addEventListener("click", () => this.togglePlayback());
         this.prevButton.addEventListener("click", () => this.changeTrack(-1));
         this.nextButton.addEventListener("click", () => this.changeTrack(1));
 
