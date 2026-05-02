@@ -341,6 +341,16 @@ button { background: none; border: none; color: inherit; }
     border-radius: var(--radius-pill);
     background: var(--surface-hi);
 }
+/* Filled progress indicator via custom property */
+.progress-input::-webkit-slider-runnable-track {
+    background: linear-gradient(
+        to right,
+        var(--accent) 0%,
+        var(--accent) var(--pct, 0%),
+        var(--surface-hi) var(--pct, 0%),
+        var(--surface-hi) 100%
+    );
+}
 .progress-input::-webkit-slider-thumb,
 .volume-wrap input::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -441,6 +451,12 @@ button { background: none; border: none; color: inherit; }
 }
 .chip:hover { background: var(--surface-hi); color: var(--text-2); }
 .chip[aria-pressed="true"] {
+    background: rgba(192,132,252,0.15);
+    border-color: rgba(192,132,252,0.4);
+    color: var(--accent);
+}
+/* also handle class-based toggle as fallback */
+.chip.chip-active {
     background: rgba(192,132,252,0.15);
     border-color: rgba(192,132,252,0.4);
     color: var(--accent);
@@ -558,11 +574,12 @@ button { background: none; border: none; color: inherit; }
     margin-top: 2px;
 }
 .track-state {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 700;
     white-space: nowrap;
     flex-shrink: 0;
+    letter-spacing: 0.03em;
 }
 
 .panel-note {

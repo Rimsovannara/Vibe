@@ -104,7 +104,6 @@ class VibePlayer {
         this.statusTimeout = null;
         this.isScrubbing = false;
         this.animationFrameId = null;
-        this.currentBlobUrl = null;
         this.currentLoadTarget = null;
 
         this.audio = document.getElementById("audio");
@@ -112,7 +111,6 @@ class VibePlayer {
         this.trackArtist = document.getElementById("track-artist");
         this.trackPosition = document.getElementById("track-position");
         this.trackMood = document.getElementById("track-mood");
-        this.trackNote = document.getElementById("track-note");
         this.trackList = document.getElementById("track-list");
         this.trackCount = document.getElementById("track-count");
         this.playButton = document.getElementById("play-button");
@@ -130,7 +128,6 @@ class VibePlayer {
         this.playerVisual = document.getElementById("player-visual");
         this.vinylDisc = document.querySelector(".vinyl-disc");
         this.heroPlayButton = null; // removed in redesign
-        this.trackNote = null;      // removed in redesign
         this.visualizer = document.getElementById("visualizer");
 
         window.VibePlayerInstance = this;
@@ -293,6 +290,12 @@ class VibePlayer {
         });
 
         this.audio.addEventListener("waiting", () => this.setStatus("Buffering..."));
+        this.audio.addEventListener("canplay", () => {
+            // Clear buffering state once audio is ready
+            if (this.statusPill.textContent === "Buffering...") {
+                this.setStatus(this.audio.paused ? "Ready" : "Playing");
+            }
+        });
         this.audio.addEventListener("ratechange", () => this.updatePositionState());
         this.audio.addEventListener("durationchange", () => this.updatePositionState());
         this.audio.addEventListener("ended", () => {
@@ -459,6 +462,7 @@ class VibePlayer {
         if (!Number.isFinite(this.audio.duration) || this.audio.duration <= 0) {
             if (!this.isScrubbing) {
                 this.progress.value = "0";
+                this.progress.style.setProperty("--pct", "0%");
             }
             return;
         }
@@ -466,6 +470,7 @@ class VibePlayer {
         const ratio = (this.audio.currentTime / this.audio.duration) * 100;
         if (!this.isScrubbing) {
             this.progress.value = String(ratio);
+            this.progress.style.setProperty("--pct", `${ratio}%`);
         }
         this.currentTime.textContent = formatTime(this.audio.currentTime);
         this.duration.textContent = formatTime(this.audio.duration);
@@ -573,11 +578,11 @@ class VibePlayer {
             }
 
             if (isActive && !this.audio.paused) {
-                state.textContent = "Playing";
+                state.textContent = "▶ Playing";
             } else if (isActive) {
-                state.textContent = "Selected";
+                state.textContent = "●";
             } else {
-                state.textContent = "Ready";
+                state.textContent = "";
             }
         });
     }
