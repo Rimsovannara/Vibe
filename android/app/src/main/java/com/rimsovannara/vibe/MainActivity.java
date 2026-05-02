@@ -73,6 +73,18 @@ public final class MainActivity extends Activity {
         configureWebView(webView);
         setContentView(webView);
 
+        android.content.IntentFilter filter = new android.content.IntentFilter();
+        filter.addAction(MediaService.ACTION_PLAY);
+        filter.addAction(MediaService.ACTION_PAUSE);
+        filter.addAction(MediaService.ACTION_NEXT);
+        filter.addAction(MediaService.ACTION_PREV);
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(mediaReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(mediaReceiver, filter);
+        }
+
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState);
         } else {
@@ -112,6 +124,10 @@ public final class MainActivity extends Activity {
             webView.destroy();
             webView = null;
         }
+
+        try {
+            unregisterReceiver(mediaReceiver);
+        } catch (Exception ignored) {}
 
         super.onDestroy();
     }
@@ -175,7 +191,56 @@ public final class MainActivity extends Activity {
                 }
             });
         }
+
+        @JavascriptInterface
+        public void updateMetadata(String title, String artist) {
+            android.content.Intent intent = new android.content.Intent(MainActivity.this, MediaService.class);
+            intent.setAction(MediaService.ACTION_UPDATE_METADATA);
+            intent.putExtra("title", title);
+            intent.putExtra("artist", artist);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
+        }
+
+        @JavascriptInterface
+        public void updatePlaybackState(boolean isPlaying) {
+            android.content.Intent intent = new android.content.Intent(MainActivity.this, MediaService.class);
+            intent.setAction(MediaService.ACTION_UPDATE_STATE);
+            intent.putExtra("isPlaying", isPlaying);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
+        }
     }
+
+    private final android.content.BroadcastReceiver mediaReceiver = new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(android.content.Context context, android.content.Intent intent) {
+            if (webView != null && intent != null && intent.getAction() != null) {
+                String jsAction = null;
+                switch (intent.getAction()) {
+                    case MediaService.ACTION_PLAY:
+                    case MediaService.ACTION_PAUSE:
+                        jsAction = "window.VibePlayerInstance.togglePlayback();";
+                        break;
+                    case MediaService.ACTION_NEXT:
+                        jsAction = "window.VibePlayerInstance.changeTrack(1);";
+                        break;
+                    case MediaService.ACTION_PREV:
+                        jsAction = "window.VibePlayerInstance.changeTrack(-1);";
+                        break;
+                }
+                if (jsAction != null) {
+                    webView.evaluateJavascript(jsAction, null);
+                }
+            }
+        }
+    };
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -214,7 +279,7 @@ public final class MainActivity extends Activity {
                     MediaStore.Audio.Media.IS_MUSIC
                 };
                 
-                String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
+                String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + MediaStore.Audio.Media.DURATION + " > 30000";
                 try (Cursor cursor = getContentResolver().query(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                         projection,

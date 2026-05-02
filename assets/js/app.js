@@ -131,6 +131,8 @@ class VibePlayer {
         this.heroPlayButton = document.querySelector('[data-action="toggle-play"]');
         this.visualizer = document.getElementById("visualizer");
 
+        window.VibePlayerInstance = this;
+
         this.handleFirstInteraction = () => {
             if (this.audio.paused && this.audio.src) {
                 this.playCurrentTrack();
@@ -260,6 +262,9 @@ class VibePlayer {
             this.updateMediaSessionState();
             this.startProgressLoop();
             if (this.visualizer) this.visualizer.classList.add("is-playing");
+            if (window.VibeApp && window.VibeApp.updatePlaybackState) {
+                window.VibeApp.updatePlaybackState(true);
+            }
         });
 
         this.audio.addEventListener("pause", () => {
@@ -270,6 +275,9 @@ class VibePlayer {
             this.updateMediaSessionState();
             this.stopProgressLoop();
             if (this.visualizer) this.visualizer.classList.remove("is-playing");
+            if (window.VibeApp && window.VibeApp.updatePlaybackState) {
+                window.VibeApp.updatePlaybackState(false);
+            }
         });
 
         this.audio.addEventListener("waiting", () => this.setStatus("Buffering..."));
@@ -371,6 +379,10 @@ class VibePlayer {
         this.syncMediaSession(track);
         this.updateMediaSessionState();
         this.updatePositionState();
+
+        if (window.VibeApp && window.VibeApp.updateMetadata) {
+            window.VibeApp.updateMetadata(track.title, track.artist);
+        }
 
         this.audio.src = track.src;
         this.audio.load();
