@@ -154,13 +154,24 @@ public final class MainActivity extends Activity {
         @JavascriptInterface
         public void requestDeviceAudio() {
             runOnUiThread(() -> {
-                String permission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
+                java.util.List<String> permissionsToRequest = new java.util.ArrayList<>();
+                String mediaPerm = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
                     Manifest.permission.READ_MEDIA_AUDIO : Manifest.permission.READ_EXTERNAL_STORAGE;
                 
-                if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
-                    syncAudio();
+                if (checkSelfPermission(mediaPerm) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(mediaPerm);
+                }
+                
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
+                    }
+                }
+
+                if (!permissionsToRequest.isEmpty()) {
+                    requestPermissions(permissionsToRequest.toArray(new String[0]), PERMISSION_REQUEST_CODE);
                 } else {
-                    requestPermissions(new String[]{permission}, PERMISSION_REQUEST_CODE);
+                    syncAudio();
                 }
             });
         }
@@ -170,7 +181,21 @@ public final class MainActivity extends Activity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            boolean mediaGranted = false;
+            // If we didn't request media permissions this time, it means we already have them.
+            if (checkSelfPermission(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ? 
+                Manifest.permission.READ_MEDIA_AUDIO : Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                mediaGranted = true;
+            } else {
+                for (int i = 0; i < permissions.length; i++) {
+                    if (permissions[i].equals(Manifest.permission.READ_MEDIA_AUDIO) || 
+                        permissions[i].equals(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                        mediaGranted = (grantResults[i] == PackageManager.PERMISSION_GRANTED);
+                    }
+                }
+            }
+
+            if (mediaGranted) {
                 syncAudio();
             } else {
                 Log.w("VibeApp", "Storage permission denied");
@@ -222,9 +247,10 @@ public final class MainActivity extends Activity {
                 }
                 
                 String jsonString = jsonTracks.toString();
+                String b64 = android.util.Base64.encodeToString(jsonString.getBytes(java.nio.charset.StandardCharsets.UTF_8), android.util.Base64.NO_WRAP);
                 
                 final String jsCode = "if(window.onAndroidAudioSync) { " +
-                        "window.onAndroidAudioSync(" + jsonString + "); " +
+                        "window.onAndroidAudioSync(JSON.parse(decodeURIComponent(escape(window.atob('" + b64 + "'))))); " +
                         "}";
                 
                 runOnUiThread(() -> {

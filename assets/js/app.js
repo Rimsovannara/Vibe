@@ -517,7 +517,13 @@ class VibePlayer {
 
             meta.append(title, line);
             button.append(meta, state);
-            button.addEventListener("click", () => this.loadTrack(index, true));
+            button.addEventListener("click", () => {
+                if (index === this.currentIndex) {
+                    this.togglePlayback();
+                } else {
+                    this.loadTrack(index, true);
+                }
+            });
 
             item.appendChild(button);
             this.trackList.appendChild(item);
