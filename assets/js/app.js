@@ -172,19 +172,22 @@ class VibePlayer {
             }
             
             window.onAndroidAudioSync = (syncedTracks) => {
-                if (syncedTracks && syncedTracks.length > 0) {
-                    const existingSrcs = new Set(this.tracks.map(t => t.src));
-                    const newTracks = syncedTracks.filter(t => !existingSrcs.has(t.src));
+                // Remove all previously-synced device songs first, keeping only built-in tracks
+                this.tracks = this.tracks.filter(t => !t._fromDevice);
 
-                    if (newTracks.length > 0) {
-                        this.tracks = [...this.tracks, ...newTracks];
-                        this.renderTrackList();
-                        this.setStatus(`Synced ${newTracks.length} new device songs`);
-                    } else {
-                        this.setStatus("All device songs are already synced");
+                if (syncedTracks && syncedTracks.length > 0) {
+                    // Tag each new track so we can cleanly replace them next time
+                    const deviceTracks = syncedTracks.map(t => ({ ...t, _fromDevice: true }));
+                    this.tracks = [...this.tracks, ...deviceTracks];
+                    this.renderTrackList();
+                    // Reset to first track if current index is now out of bounds
+                    if (this.currentIndex >= this.tracks.length) {
+                        this.currentIndex = 0;
                     }
+                    this.setStatus(`Synced ${deviceTracks.length} songs from your device`);
                 } else {
-                    this.setStatus("No device songs found");
+                    this.renderTrackList();
+                    this.setStatus("No music found on device");
                 }
             };
         }
