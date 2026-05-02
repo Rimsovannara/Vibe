@@ -39,22 +39,30 @@ public class MediaService extends Service {
         mediaSession.setCallback(new MediaSession.Callback() {
             @Override
             public void onPlay() {
-                sendBroadcast(new Intent(ACTION_PLAY));
+                Intent b = new Intent(ACTION_PLAY);
+                b.setPackage(getPackageName());
+                sendBroadcast(b);
             }
 
             @Override
             public void onPause() {
-                sendBroadcast(new Intent(ACTION_PAUSE));
+                Intent b = new Intent(ACTION_PAUSE);
+                b.setPackage(getPackageName());
+                sendBroadcast(b);
             }
 
             @Override
             public void onSkipToNext() {
-                sendBroadcast(new Intent(ACTION_NEXT));
+                Intent b = new Intent(ACTION_NEXT);
+                b.setPackage(getPackageName());
+                sendBroadcast(b);
             }
 
             @Override
             public void onSkipToPrevious() {
-                sendBroadcast(new Intent(ACTION_PREV));
+                Intent b = new Intent(ACTION_PREV);
+                b.setPackage(getPackageName());
+                sendBroadcast(b);
             }
         });
         mediaSession.setActive(true);
@@ -79,8 +87,10 @@ public class MediaService extends Service {
                 case ACTION_PAUSE:
                 case ACTION_NEXT:
                 case ACTION_PREV:
-                    // If the notification button pending intents bounce back here, forward them as broadcast
-                    sendBroadcast(new Intent(intent.getAction()));
+                    // If the notification button pending intents bounce back here, forward them as explicit broadcast
+                    Intent b = new Intent(intent.getAction());
+                    b.setPackage(getPackageName());
+                    sendBroadcast(b);
                     break;
             }
         }

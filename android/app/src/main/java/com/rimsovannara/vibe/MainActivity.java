@@ -279,7 +279,12 @@ public final class MainActivity extends Activity {
                     MediaStore.Audio.Media.IS_MUSIC
                 };
                 
-                String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + MediaStore.Audio.Media.DURATION + " > 30000";
+                String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + 
+                                   MediaStore.Audio.Media.IS_ALARM + " == 0 AND " +
+                                   MediaStore.Audio.Media.IS_NOTIFICATION + " == 0 AND " +
+                                   MediaStore.Audio.Media.IS_RINGTONE + " == 0 AND " +
+                                   MediaStore.Audio.Media.IS_PODCAST + " == 0 AND " +
+                                   MediaStore.Audio.Media.DURATION + " > 30000";
                 try (Cursor cursor = getContentResolver().query(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                         projection,
