@@ -171,6 +171,10 @@ class VibePlayer {
             }
             
             window.onAndroidAudioSync = (syncedTracks) => {
+                const currentTrack = this.tracks[this.currentIndex];
+                const isPlayingDeviceSong = currentTrack && currentTrack._fromDevice;
+                const wasPlaying = !this.audio.paused;
+
                 // Remove all previously-synced device songs first, keeping only built-in tracks
                 this.tracks = this.tracks.filter(t => !t._fromDevice);
 
@@ -179,13 +183,16 @@ class VibePlayer {
                     const deviceTracks = syncedTracks.map(t => ({ ...t, _fromDevice: true }));
                     this.tracks = [...this.tracks, ...deviceTracks];
                     this.renderTrackList();
-                    // Reset to first track if current index is now out of bounds
-                    if (this.currentIndex >= this.tracks.length) {
-                        this.currentIndex = 0;
+                    
+                    if (isPlayingDeviceSong || this.currentIndex >= this.tracks.length) {
+                        this.loadTrack(0, wasPlaying);
                     }
                     this.setStatus(`Synced ${deviceTracks.length} songs from your device`);
                 } else {
                     this.renderTrackList();
+                    if (isPlayingDeviceSong || this.currentIndex >= this.tracks.length) {
+                        this.loadTrack(0, wasPlaying);
+                    }
                     this.setStatus("No music found on device");
                 }
             };
