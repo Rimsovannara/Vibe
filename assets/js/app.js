@@ -129,6 +129,7 @@ class VibePlayer {
         this.helperText = document.getElementById("helper-text");
         this.playerVisual = document.getElementById("player-visual");
         this.heroPlayButton = document.querySelector('[data-action="toggle-play"]');
+        this.visualizer = document.getElementById("visualizer");
 
         this.handleFirstInteraction = () => {
             if (this.audio.paused && this.audio.src) {
@@ -258,6 +259,7 @@ class VibePlayer {
             this.updateTrackButtons();
             this.updateMediaSessionState();
             this.startProgressLoop();
+            if (this.visualizer) this.visualizer.classList.add("is-playing");
         });
 
         this.audio.addEventListener("pause", () => {
@@ -267,6 +269,7 @@ class VibePlayer {
             this.updateTrackButtons();
             this.updateMediaSessionState();
             this.stopProgressLoop();
+            if (this.visualizer) this.visualizer.classList.remove("is-playing");
         });
 
         this.audio.addEventListener("waiting", () => this.setStatus("Buffering..."));
