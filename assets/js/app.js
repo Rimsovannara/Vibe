@@ -128,7 +128,8 @@ class VibePlayer {
         this.statusPill = document.getElementById("status-pill");
         this.helperText = document.getElementById("helper-text");
         this.playerVisual = document.getElementById("player-visual");
-        this.heroPlayButton = document.querySelector('[data-action="toggle-play"]');
+        this.vinylDisc = document.querySelector(".vinyl-disc");
+        this.heroPlayButton = null;
         this.visualizer = document.getElementById("visualizer");
 
         window.VibePlayerInstance = this;
@@ -258,26 +259,33 @@ class VibePlayer {
         });
 
         this.audio.addEventListener("play", () => {
-            this.playButton.textContent = "Pause";
-            this.heroPlayButton.textContent = "Pause current track";
-            this.setStatus("Playing now");
+            // Toggle SVG icons
+            const iconPlay = this.playButton.querySelector(".icon-play");
+            const iconPause = this.playButton.querySelector(".icon-pause");
+            if (iconPlay) iconPlay.style.display = "none";
+            if (iconPause) iconPause.style.display = "";
+            this.setStatus("Playing");
             this.updateTrackButtons();
             this.updateMediaSessionState();
             this.startProgressLoop();
             if (this.visualizer) this.visualizer.classList.add("is-playing");
+            if (this.vinylDisc) this.vinylDisc.classList.add("is-playing");
             if (window.VibeApp && window.VibeApp.updatePlaybackState) {
                 window.VibeApp.updatePlaybackState(true);
             }
         });
 
         this.audio.addEventListener("pause", () => {
-            this.playButton.textContent = "Play";
-            this.heroPlayButton.textContent = "Play current track";
+            const iconPlay = this.playButton.querySelector(".icon-play");
+            const iconPause = this.playButton.querySelector(".icon-pause");
+            if (iconPlay) iconPlay.style.display = "";
+            if (iconPause) iconPause.style.display = "none";
             this.setStatus("Paused");
             this.updateTrackButtons();
             this.updateMediaSessionState();
             this.stopProgressLoop();
             if (this.visualizer) this.visualizer.classList.remove("is-playing");
+            if (this.vinylDisc) this.vinylDisc.classList.remove("is-playing");
             if (window.VibeApp && window.VibeApp.updatePlaybackState) {
                 window.VibeApp.updatePlaybackState(false);
             }
@@ -370,9 +378,8 @@ class VibePlayer {
         this.trackTitle.textContent = track.title;
         this.trackArtist.textContent = track.artist;
         this.trackPosition.textContent = `Track ${this.currentIndex + 1} of ${this.tracks.length}`;
-        this.trackMood.textContent = track.mood || "Set the mood for this track.";
-        this.trackNote.textContent = track.note || "Add a short note for this track in assets/js/app.js.";
-        this.playerVisual.style.setProperty("--art-accent", track.accent || "#ff8a5b");
+        if (this.trackMood) this.trackMood.textContent = track.mood || "";
+        // trackNote removed from new layout
 
         this.currentTime.textContent = "0:00";
         this.duration.textContent = "0:00";
@@ -474,16 +481,14 @@ class VibePlayer {
 
     setLoopState(isLooping) {
         this.audio.loop = isLooping;
-        this.loopButton.textContent = isLooping ? "Loop on" : "Loop off";
-        this.loopButton.classList.toggle("chip-button-active", isLooping);
         this.loopButton.setAttribute("aria-pressed", String(isLooping));
+        this.loopButton.classList.toggle("chip-active", isLooping);
     }
 
     setShuffleState(isShuffleEnabled) {
         this.isShuffle = isShuffleEnabled;
-        this.shuffleButton.textContent = isShuffleEnabled ? "Shuffle on" : "Shuffle off";
-        this.shuffleButton.classList.toggle("chip-button-active", isShuffleEnabled);
         this.shuffleButton.setAttribute("aria-pressed", String(isShuffleEnabled));
+        this.shuffleButton.classList.toggle("chip-active", isShuffleEnabled);
     }
 
     setStatus(message) {
@@ -493,12 +498,12 @@ class VibePlayer {
             window.clearTimeout(this.statusTimeout);
         }
 
-        if (message !== "Playing now") {
+        if (message !== "Playing") {
             this.statusTimeout = window.setTimeout(() => {
                 if (this.audio.paused) {
-                    this.statusPill.textContent = "Ready to play";
+                    this.statusPill.textContent = "Ready";
                 } else {
-                    this.statusPill.textContent = "Playing now";
+                    this.statusPill.textContent = "Playing";
                 }
             }, 2200);
         }
@@ -525,13 +530,17 @@ class VibePlayer {
             line.className = "track-line";
             state.className = "track-state";
 
+            const num = document.createElement("span");
+            num.className = "track-num";
+            num.textContent = String(index + 1);
+
             title.textContent = track.title;
-            line.textContent = `${track.artist} · ${track.mood || "Mood line pending"}`;
-            state.textContent = "Ready";
+            line.textContent = track.artist;
+            state.textContent = "";
             button.setAttribute("aria-label", `Play ${track.title} by ${track.artist}`);
 
             meta.append(title, line);
-            button.append(meta, state);
+            button.append(num, meta, state);
             button.addEventListener("click", () => {
                 if (index === this.currentIndex) {
                     this.togglePlayback();

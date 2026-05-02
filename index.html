@@ -2,143 +2,153 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#09131f">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0f">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta
-        name="description"
-        content="Vibe is a polished late-night listening room with a custom audio player built for MP3 playback.">
-    <title>Vibe | Personal Listening Room</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Vibe — a premium personal music player for your favourite tracks.">
+    <title>Vibe</title>
     <link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
-    <div class="page-shell">
-        <header class="hero">
-            <div class="hero-copy">
-                <p class="eyebrow">Vibe</p>
-                <h1>A better home for the tracks you keep coming back to.</h1>
-                <p class="hero-text">
-                    Simple controls, one clean track list, and local MP3 playback that stays out of the way.
-                </p>
-                <div class="hero-actions">
-                    <button class="button button-primary" type="button" data-action="toggle-play">
-                        Play current track
-                    </button>
-                    <a class="button button-secondary" href="#tracks">Jump to tracks</a>
-                </div>
-            </div>
+    <div class="app-shell">
 
-            <aside class="hero-panel" aria-label="Listening summary">
-                <p class="eyebrow">Current mood</p>
-                <p class="hero-panel-title" id="track-mood">Late-night replay energy.</p>
-                <p class="hero-panel-copy" id="track-note">
-                    Local MP3 playback stays focused here: one player up front and one clear list of tracks.
-                </p>
-            </aside>
+        <!-- Ambient background blobs -->
+        <div class="ambient" aria-hidden="true">
+            <span class="ambient-blob blob-1"></span>
+            <span class="ambient-blob blob-2"></span>
+            <span class="ambient-blob blob-3"></span>
+        </div>
+
+        <!-- Top bar -->
+        <header class="topbar">
+            <div class="topbar-logo">
+                <span class="logo-dot"></span>
+                <span class="logo-text">Vibe</span>
+            </div>
+            <div class="topbar-right">
+                <div id="android-actions" style="display:none;">
+                    <button class="icon-btn sync-btn" id="sync-android-button" type="button" aria-label="Sync device songs">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                        <span>Sync</span>
+                    </button>
+                </div>
+                <p class="status-badge" id="status-pill" aria-live="polite">Ready</p>
+            </div>
         </header>
 
-        <main class="layout">
-            <section class="player-card" aria-labelledby="now-playing-title">
-                <div class="player-visual" id="player-visual">
-                    <div class="visual-copy">
-                        <p class="visual-label">
-                            Now playing
-                            <span class="visualizer" id="visualizer" aria-hidden="true">
-                                <span class="visualizer-bar"></span>
-                                <span class="visualizer-bar"></span>
-                                <span class="visualizer-bar"></span>
-                                <span class="visualizer-bar"></span>
-                            </span>
-                        </p>
-                        <h2 class="visual-title" id="track-title">No One Noticed</h2>
-                        <p class="visual-subtitle" id="track-artist">The Marias</p>
-                        <p class="visual-counter" id="track-position">Track 1 of 1</p>
+        <main class="main-layout">
+
+            <!-- Player section -->
+            <section class="player-section" aria-label="Now playing">
+
+                <!-- Album art card -->
+                <div class="artwork-card" id="player-visual">
+                    <div class="artwork-glow"></div>
+                    <div class="artwork-inner">
+                        <!-- Vinyl disc -->
+                        <div class="vinyl-wrap">
+                            <div class="vinyl-disc">
+                                <div class="vinyl-ring r1"></div>
+                                <div class="vinyl-ring r2"></div>
+                                <div class="vinyl-center"></div>
+                            </div>
+                        </div>
+                        <!-- Track info overlay -->
+                        <div class="artwork-meta">
+                            <p class="now-label">
+                                Now playing
+                                <span class="visualizer" id="visualizer" aria-hidden="true">
+                                    <span class="visualizer-bar"></span>
+                                    <span class="visualizer-bar"></span>
+                                    <span class="visualizer-bar"></span>
+                                    <span class="visualizer-bar"></span>
+                                </span>
+                            </p>
+                            <h1 class="artwork-title" id="track-title">No One Noticed</h1>
+                            <p class="artwork-artist" id="track-artist">The Marías</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="player-meta">
-                    <div>
-                        <p class="eyebrow">Player</p>
-                        <h2 id="now-playing-title">Now playing</h2>
+                <!-- Player controls card -->
+                <div class="controls-card">
+
+                    <!-- Track position & mood -->
+                    <div class="track-info-row">
+                        <p class="track-position" id="track-position">Track 1 of 1</p>
+                        <p class="track-mood" id="track-mood">Late-night replay energy.</p>
                     </div>
-                    <p class="status-pill" id="status-pill" aria-live="polite">Ready to play</p>
-                </div>
 
-                <div class="progress-block">
-                    <label class="sr-only" for="progress">Track progress</label>
-                    <input id="progress" class="progress-input" type="range" min="0" max="100" value="0">
-                    <div class="time-row" aria-hidden="true">
-                        <span id="current-time">0:00</span>
-                        <span id="duration">0:00</span>
+                    <!-- Progress bar -->
+                    <div class="progress-block">
+                        <label class="sr-only" for="progress">Track progress</label>
+                        <input id="progress" class="progress-input" type="range" min="0" max="100" value="0">
+                        <div class="time-row" aria-hidden="true">
+                            <span id="current-time">0:00</span>
+                            <span id="duration">0:00</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="transport-row">
-                    <button class="control-button" id="prev-button" type="button" aria-label="Previous track">
-                        Prev
-                    </button>
-                    <button class="control-button control-button-primary" id="play-button" type="button"
-                        aria-label="Play or pause">
-                        Play
-                    </button>
-                    <button class="control-button" id="next-button" type="button" aria-label="Next track">
-                        Next
-                    </button>
-                </div>
-
-                <div class="utility-row">
-                    <div class="utility-group">
-                        <button class="chip-button" id="loop-button" type="button" aria-pressed="false">
-                            Loop off
+                    <!-- Transport -->
+                    <div class="transport-row">
+                        <button class="transport-btn" id="prev-button" type="button" aria-label="Previous track">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
                         </button>
-                        <button class="chip-button" id="shuffle-button" type="button" aria-pressed="false">
-                            Shuffle off
+                        <button class="transport-btn transport-play" id="play-button" type="button" aria-label="Play or pause" data-action="toggle-play">
+                            <svg class="icon-play" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                            <svg class="icon-pause" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+                        </button>
+                        <button class="transport-btn" id="next-button" type="button" aria-label="Next track">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6zm8.5-6v6h2V6h-2z"/></svg>
                         </button>
                     </div>
-                    <label class="volume-control" for="volume">
-                        <span id="volume-label">Volume 88%</span>
-                        <input id="volume" type="range" min="0" max="100" value="88">
-                    </label>
+
+                    <!-- Utility row -->
+                    <div class="utility-row">
+                        <div class="chip-group">
+                            <button class="chip" id="loop-button" type="button" aria-pressed="false">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                                Loop
+                            </button>
+                            <button class="chip" id="shuffle-button" type="button" aria-pressed="false">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+                                Shuffle
+                            </button>
+                        </div>
+                        <label class="volume-wrap" for="volume">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                            <span id="volume-label" class="sr-only">Volume 88%</span>
+                            <input id="volume" type="range" min="0" max="100" value="88">
+                        </label>
+                    </div>
+
+                    <p class="helper-text" id="helper-text" aria-live="polite">
+                        If autoplay is blocked, press play once to start the queue.
+                    </p>
                 </div>
-
-                <p class="helper-text" id="helper-text" aria-live="polite">
-                    If autoplay is blocked, press play once and the queue will keep moving normally after that.
-                </p>
-
-                <audio id="audio" preload="auto" playsinline></audio>
-                <noscript>
-                    <p class="helper-text">JavaScript is required for the custom player and track list.</p>
-                </noscript>
             </section>
 
-            <section class="queue-card" id="tracks" aria-labelledby="queue-title">
-                <div class="section-heading">
+            <!-- Queue section -->
+            <section class="queue-section" id="tracks" aria-labelledby="queue-title">
+                <div class="queue-header">
                     <div>
-                        <p class="eyebrow">Tracks</p>
-                        <h2 id="queue-title">Track list</h2>
+                        <h2 id="queue-title">Queue</h2>
+                        <p class="queue-count" id="track-count">1 track</p>
                     </div>
-                    <div class="header-actions" id="android-actions" style="display: none;">
-                        <button class="button button-secondary" id="sync-android-button" type="button">
-                            Sync device songs
-                        </button>
-                    </div>
-                    <p class="section-count" id="track-count">1 track</p>
                 </div>
-
                 <ol class="track-list" id="track-list"></ol>
-
-                <p class="panel-note">
-                    Tap any track to play it. Add more MP3 tracks in <code>assets/js/app.js</code>.
-                </p>
+                <p class="panel-note">Tap any track to play it.</p>
+                <audio id="audio" preload="auto" playsinline></audio>
+                <noscript><p class="panel-note">JavaScript is required.</p></noscript>
             </section>
+
         </main>
     </div>
 
