@@ -87,7 +87,7 @@ public class MediaService extends Service {
                 case ACTION_PAUSE:
                 case ACTION_NEXT:
                 case ACTION_PREV:
-                    // If the notification button pending intents bounce back here, forward them as explicit broadcast
+                    // If any old service intents bounce back here, forward them as explicit broadcast
                     Intent b = new Intent(intent.getAction());
                     b.setPackage(getPackageName());
                     sendBroadcast(b);
@@ -182,9 +182,9 @@ public class MediaService extends Service {
     }
 
     private PendingIntent getPendingIntent(String action) {
-        Intent intent = new Intent(this, MediaService.class);
-        intent.setAction(action);
-        return PendingIntent.getService(this, action.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE);
+        Intent intent = new Intent(action);
+        intent.setPackage(getPackageName());
+        return PendingIntent.getBroadcast(this, action.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE);
     }
 
     private void createNotificationChannel() {
