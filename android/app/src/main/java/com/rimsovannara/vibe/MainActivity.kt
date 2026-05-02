@@ -44,6 +44,8 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
+import com.rimsovannara.vibe.db.AppDatabase
+import com.rimsovannara.vibe.db.FavoriteTrack
 
 class MainActivity : Activity() {
 
@@ -51,9 +53,11 @@ class MainActivity : Activity() {
     private var assetLoader: WebViewAssetLoader? = null
     private var audioServer: AudioServer? = null
     private var audioServerPort = 8080
+    private lateinit var db: AppDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        db = AppDatabase.getDatabase(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.decorView.systemUiVisibility = (
@@ -222,6 +226,17 @@ class MainActivity : Activity() {
                 startService(intent)
             }
         }
+
+        @JavascriptInterface
+        fun toggleFavorite(id: String, isFavorite: Boolean) {
+            CoroutineScope(Dispatchers.IO).launch {
+                if (isFavorite) {
+                    db.favoriteDao().addFavorite(FavoriteTrack(id))
+                } else {
+                    db.favoriteDao().removeFavorite(id)
+                }
+            }
+        }
     }
 
     private val mediaReceiver = object : BroadcastReceiver() {
@@ -293,6 +308,9 @@ class MainActivity : Activity() {
                     selection += " AND ${MediaStore.MediaColumns.IS_PENDING} == 0"
                 }
 
+                val favoritesList = db.favoriteDao().getAllFavorites()
+                val favoritesSet = favoritesList.map { it.id }.toSet()
+
                 contentResolver.query(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     projection,
@@ -312,18 +330,20 @@ class MainActivity : Activity() {
                             if (!f.exists() || f.length() == 0L) continue
                         }
 
-                        val id = cursor.getLong(idCol)
+                        val id = cursor.getLong(idCol).toString()
                         val title = cursor.getString(titleCol)
                         var artist = cursor.getString(artistCol)
                         if (artist == null || artist == "<unknown>") artist = "Unknown Artist"
 
                         val track = JSONObject().apply {
+                            put("id", id)
                             put("title", title)
                             put("artist", artist)
                             put("src", "http://127.0.0.1:$audioServerPort/audio/$id")
                             put("mood", "From your device")
                             put("note", "Synced automatically by the Vibe Android app.")
                             put("accent", "#8a5bff")
+                            put("isFavorite", favoritesSet.contains(id))
                         }
                         jsonTracks.put(track)
                     }

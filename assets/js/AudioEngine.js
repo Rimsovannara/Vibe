@@ -86,6 +86,15 @@ export class AudioEngine extends EventTarget {
         return this.audio.loop;
     }
 
+    toggleFavorite() {
+        const track = this.currentTrack;
+        if (!track) return false;
+        
+        track.isFavorite = !track.isFavorite;
+        this.dispatchEvent(new CustomEvent('favoriteChanged', { detail: { track, isFavorite: track.isFavorite } }));
+        return track.isFavorite;
+    }
+
     toggleShuffle() {
         this.isShuffle = !this.isShuffle;
         this.dispatchEvent(new CustomEvent('shuffleChanged', { detail: { isShuffle: this.isShuffle } }));

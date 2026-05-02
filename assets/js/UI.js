@@ -17,6 +17,7 @@ export class UI {
         this.playButton = document.getElementById("play-button");
         this.prevButton = document.getElementById("prev-button");
         this.nextButton = document.getElementById("next-button");
+        this.favoriteButton = document.getElementById("favorite-button");
         this.progress = document.getElementById("progress");
         this.currentTime = document.getElementById("current-time");
         this.duration = document.getElementById("duration");
@@ -66,6 +67,11 @@ export class UI {
         this.playButton.addEventListener("click", () => this.engine.togglePlayback());
         this.prevButton.addEventListener("click", () => this.engine.changeTrack(-1));
         this.nextButton.addEventListener("click", () => this.engine.changeTrack(1));
+        if (this.favoriteButton) {
+            this.favoriteButton.addEventListener("click", () => {
+                this.engine.toggleFavorite();
+            });
+        }
 
         this.progress.addEventListener("input", () => {
             if (!Number.isFinite(this.engine.audio.duration)) return;
@@ -166,7 +172,12 @@ export class UI {
             this.albumArt.onerror = () => { this.albumArt.style.opacity = "0"; };
             this.albumArt.src = artUrl;
 
+            this.updateFavoriteButton(track.isFavorite);
             this.updateTrackButtons();
+        });
+
+        this.engine.addEventListener("favoriteChanged", (e) => {
+            this.updateFavoriteButton(e.detail.isFavorite);
         });
 
         this.engine.addEventListener("play", () => {
@@ -346,5 +357,15 @@ export class UI {
                 state.textContent = "";
             }
         });
+    }
+
+    updateFavoriteButton(isFavorite) {
+        if (!this.favoriteButton) return;
+        const empty = this.favoriteButton.querySelector('.icon-heart-empty');
+        const filled = this.favoriteButton.querySelector('.icon-heart-filled');
+        if (empty && filled) {
+            empty.style.display = isFavorite ? 'none' : '';
+            filled.style.display = isFavorite ? '' : 'none';
+        }
     }
 }

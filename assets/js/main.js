@@ -1,6 +1,7 @@
 import { AudioEngine } from './AudioEngine.js';
 import { UI } from './UI.js';
 import { Bridge } from './Bridge.js';
+import { hashString } from './utils.js';
 
 const defaultTracks = [
     {
@@ -98,9 +99,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const ui = new UI(engine);
     const bridge = new Bridge(engine, ui);
 
-    engine.setTracks(defaultTracks);
+    const processedTracks = defaultTracks.map(t => ({
+        ...t,
+        id: hashString(t.title + t.artist)
+    }));
     
-    if (defaultTracks.length > 0) {
+    engine.setTracks(processedTracks);
+    
+    if (processedTracks.length > 0) {
         engine.loadTrack(0);
         engine.play();
     }

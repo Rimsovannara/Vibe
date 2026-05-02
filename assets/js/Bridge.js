@@ -110,6 +110,14 @@ export class Bridge {
 
         this.engine.addEventListener("play", () => this._updateState(true));
         this.engine.addEventListener("pause", () => this._updateState(false));
+
+        this.engine.addEventListener("favoriteChanged", (e) => {
+            if (window.VibeApp && window.VibeApp.toggleFavorite) {
+                const track = e.detail.track;
+                // use synthetic ID or the synced device ID
+                window.VibeApp.toggleFavorite(track.id || track.src.split('/').pop(), e.detail.isFavorite);
+            }
+        });
         
         const posUpdater = () => this._updatePositionState();
         this.engine.addEventListener("ratechange", posUpdater);

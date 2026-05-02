@@ -82,8 +82,14 @@
 
                     <!-- Track position & mood -->
                     <div class="track-info-row">
-                        <p class="track-position" id="track-position">Track 1 of 1</p>
-                        <p class="track-mood" id="track-mood">Late-night replay energy.</p>
+                        <div>
+                            <p class="track-position" id="track-position">Track 1 of 1</p>
+                            <p class="track-mood" id="track-mood">Late-night replay energy.</p>
+                        </div>
+                        <button class="favorite-btn" id="favorite-button" type="button" aria-label="Toggle favorite">
+                            <svg class="icon-heart-empty" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                            <svg class="icon-heart-filled" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none; color: var(--accent);"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        </button>
                     </div>
 
                     <!-- Progress bar -->

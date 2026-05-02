@@ -12,3 +12,13 @@ export function formatTime(seconds) {
 export function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
 }
+
+export function hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0;
+    }
+    return "local_" + Math.abs(hash).toString(16);
+}

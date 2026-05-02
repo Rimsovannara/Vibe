@@ -441,11 +441,30 @@ button {
     box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+/* Track Info Row */
 .track-info-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 8px;
+    align-items: flex-end;
+}
+
+.favorite-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 8px;
+    margin: -8px; /* enlarge touch target */
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.1);
+    color: var(--text-2);
+}
+
+.favorite-btn:active {
+    transform: scale(0.9);
 }
 
 .track-position {
