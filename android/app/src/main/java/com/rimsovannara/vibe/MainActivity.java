@@ -285,7 +285,16 @@ public final class MainActivity extends Activity {
                                    MediaStore.Audio.Media.IS_NOTIFICATION + " == 0 AND " +
                                    MediaStore.Audio.Media.IS_RINGTONE + " == 0 AND " +
                                    MediaStore.Audio.Media.IS_PODCAST + " == 0 AND " +
+                                   MediaStore.Audio.Media.DATA + " NOT LIKE '%/Android/%' AND " +
                                    MediaStore.Audio.Media.DURATION + " > 30000";
+                                   
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    selection += " AND " + MediaStore.MediaColumns.IS_TRASHED + " == 0";
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    selection += " AND " + MediaStore.MediaColumns.IS_PENDING + " == 0";
+                }
+                
                 try (Cursor cursor = getContentResolver().query(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                         projection,
@@ -301,8 +310,9 @@ public final class MainActivity extends Activity {
                         
                         while (cursor.moveToNext()) {
                             String dataPath = cursor.getString(dataCol);
-                            if (dataPath != null && !new java.io.File(dataPath).exists()) {
-                                continue;
+                            if (dataPath != null) {
+                                java.io.File f = new java.io.File(dataPath);
+                                if (!f.exists() || f.length() == 0) continue;
                             }
                             
                             long id = cursor.getLong(idCol);
